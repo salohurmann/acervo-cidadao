@@ -57,7 +57,14 @@ until curl -fsS "$BASE" -o /tmp/g-home.html 2> /dev/null; do
 done
 echo "ok  sistema no ar com banco externo e usuário sem superusuário"
 
-grep -q "Entrar com conta @seju.pr.gov.br" /tmp/g-home.html || fail "a página inicial não mostra o botão de login com Google"
+if ! grep -q "Entrar com conta @seju.pr.gov.br" /tmp/g-home.html; then
+	echo "--- trecho do menu na página inicial:"
+	tr '\n' ' ' < /tmp/g-home.html | grep -o '<div id="menu">.\{0,900\}' || true
+	echo "--- traduções do login com Google no banco:"
+	docker exec "$DB" psql -U postgres -d biblivre4 -At -c "select language, key, text from global.translations where key like 'login.google%'" || true
+	docker exec "$DB" psql -U postgres -d biblivre4 -At -c "select * from global.versions" || true
+	fail "a página inicial não mostra o botão de login com Google"
+fi
 grep -q 'name="password"' /tmp/g-home.html && fail "a página inicial ainda mostra o campo de senha"
 echo "ok  página inicial só com o botão de login com Google"
 
