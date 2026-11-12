@@ -45,27 +45,27 @@ save_book() {
 
 login /tmp/jar1 "$ADMIN_PASSWORD"
 RESPONSE="$(save_book /tmp/jar1 'Dom Casmurro')"
-echo "$RESPONSE" | grep -q '"success":true' || fail "cadastro do livro: $RESPONSE"
-RECORD_ID="$(echo "$RESPONSE" | grep -o '"id":[0-9][0-9]*' | head -n 1 | cut -d: -f2)"
+echo "$RESPONSE" | grep -Eq '"success": *true' || fail "cadastro do livro: $RESPONSE"
+RECORD_ID="$(echo "$RESPONSE" | grep -Eo '"id": *[0-9]+' | head -n 1 | tr -cd '0-9')"
 [ -n "$RECORD_ID" ] || fail "cadastro do livro não devolveu o id: $RESPONSE"
 echo "ok  login e cadastro do livro (registro $RECORD_ID)"
 
 RESPONSE="$(curl -fsS -c /tmp/jar1 -b /tmp/jar1 \
 	--data-urlencode "controller=json" --data-urlencode "module=cataloging.holding" --data-urlencode "action=create_automatic_holding" \
 	--data-urlencode "record_id=$RECORD_ID" --data-urlencode "database=main" --data-urlencode "holding_count=2" "$BASE")"
-echo "$RESPONSE" | grep -q '"success":true' || fail "criação dos exemplares: $RESPONSE"
+echo "$RESPONSE" | grep -Eq '"success": *true' || fail "criação dos exemplares: $RESPONSE"
 echo "ok  criação de 2 exemplares"
 
 # Senha errada não pode autenticar.
 login /tmp/jar-bad 'senha-errada' || true
 RESPONSE="$(save_book /tmp/jar-bad 'Nao deve gravar' || true)"
-echo "$RESPONSE" | grep -q '"success":true' && fail "senha errada conseguiu gravar um registro"
+echo "$RESPONSE" | grep -Eq '"success": *true' && fail "senha errada conseguiu gravar um registro"
 echo "ok  senha errada recusada"
 
 # Segundo login: a senha do administrador já foi regravada em PBKDF2.
 login /tmp/jar2 "$ADMIN_PASSWORD"
 RESPONSE="$(save_book /tmp/jar2 'Memorias Postumas de Bras Cubas')"
-echo "$RESPONSE" | grep -q '"success":true' || fail "segundo login (senha migrada para PBKDF2): $RESPONSE"
+echo "$RESPONSE" | grep -Eq '"success": *true' || fail "segundo login (senha migrada para PBKDF2): $RESPONSE"
 echo "ok  segundo login com a senha migrada"
 
 docker rm -f "$NAME" > /dev/null
