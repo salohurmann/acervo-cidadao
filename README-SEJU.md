@@ -39,7 +39,7 @@ A fonte padrão do manual é a Proxima Nova, que é licenciada. O sistema a usa 
 
 ### Nome do sistema
 
-Instalações novas já nascem com o título "Acervo Cidadão" e o subtítulo "Biblioteca da Secretaria da Justiça e Cidadania do Paraná". Em instalações existentes, ajuste em *Administração > Configurações*.
+Instalações novas já nascem com o título "Acervo Cidadão" e o subtítulo "Biblioteca da Secretaria da Justiça". Em instalações existentes, ajuste em *Administração > Configurações*.
 
 Os textos da página inicial em português são regravados uma única vez pela atualização `seju-1.0.0` (`biblivre.update.seju_1_0_0.Update`) e continuam editáveis em *Administração > Traduções*.
 

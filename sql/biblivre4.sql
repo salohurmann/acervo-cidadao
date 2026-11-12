@@ -403,7 +403,7 @@ INSERT INTO configurations (key, value, type, required, modified, modified_by) V
 INSERT INTO configurations (key, value, type, required, modified, modified_by) VALUES ('general.pg_dump_path', '', 'string', false, '2014-06-21 11:40:03.8973', 1);
 INSERT INTO configurations (key, value, type, required, modified, modified_by) VALUES ('general.backup_path', '', 'string', false, '2014-06-21 11:40:03.8973', 1);
 INSERT INTO configurations (key, value, type, required, modified, modified_by) VALUES ('general.title', 'Acervo Cidadão', 'string', true, '2014-06-21 11:42:07.150326', 1);
-INSERT INTO configurations (key, value, type, required, modified, modified_by) VALUES ('general.subtitle', 'Biblioteca da Secretaria da Justiça e Cidadania do Paraná', 'string', false, '2014-06-21 11:42:07.150326', 1);
+INSERT INTO configurations (key, value, type, required, modified, modified_by) VALUES ('general.subtitle', 'Biblioteca da Secretaria da Justiça', 'string', false, '2014-06-21 11:42:07.150326', 1);
 
 --
 -- TOC entry 2435 (class 0 OID 741249)
