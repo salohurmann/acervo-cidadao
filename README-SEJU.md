@@ -1,0 +1,72 @@
+# Acervo Cidadão – SEJU
+
+Versão do Biblivre 5 adaptada para a Secretaria da Justiça e Cidadania do Estado do Paraná (SEJU).
+
+- **Base:** [Biblivre-org/Biblivre5x](https://github.com/Biblivre-org/Biblivre5x), commit `7512d0f` (5.1.31).
+- **Licença:** GPLv3, a mesma do projeto original (arquivo `LICENSE`). Os créditos do Biblivre foram mantidos em *Ajuda > Sobre*.
+- **Build e instalação:** iguais aos do Biblivre5x, descritos em `README.md` (`mvn clean package`, Tomcat, PostgreSQL).
+
+## O que mudou
+
+### Identidade visual
+
+| Onde | Arquivo |
+| --- | --- |
+| Paleta do Governo do Paraná (variáveis `$gov-*`) | `WebContent/static/styles/scss/_biblivre.scss` |
+| Cabeçalho, barra de menu, submenus, cores dos módulos | `WebContent/static/styles/scss/interface/_menu.scss` |
+| Botão principal | `WebContent/static/styles/scss/interface/_buttons.scss` |
+| Rodapé | `WebContent/static/styles/scss/interface/_content.scss` e `WebContent/jsp/taglib/layout/body/end.jsp` |
+| Marca no cabeçalho, remoção dos logotipos de patrocinadores | `WebContent/jsp/taglib/layout/body/start.jsp` |
+| Páginas de erro | `WebContent/jsp/error_404.jsp`, `WebContent/jsp/error_fatal.jsp` |
+| Aviso de versão modificada | `WebContent/jsp/help/about_biblivre.jsp` |
+| Ícone da aba do navegador | `WebContent/static/images/favicon.ico` |
+
+As cores seguem o *Manual de Identidade Visual dos Sites e Aplicativos do Governo do Paraná* (jun/2021), seção "Secretarias": azul `#0072BB`, ciano `#00AEEF`, verde `#009B54`/`#068833`, textos `#333`/`#555`/`#666`.
+
+Os CSS são gerados no build pelo `dart-sass-maven-plugin`; não há CSS compilado no repositório.
+
+### Marca oficial
+
+O cabeçalho usa uma assinatura em texto ("PARANÁ / Governo do Estado / Justiça e Cidadania") até que a arte oficial seja instalada. Para usar a marca oficial, copie o arquivo fornecido pela Comunicação para:
+
+```
+WebContent/static/images/marca_seju.png
+```
+
+Altura útil de 52 px e largura máxima de 117 px (use um PNG com o dobro disso para telas de alta densidade). Não é preciso alterar código: o cabeçalho detecta o arquivo.
+
+A fonte padrão do manual é a Proxima Nova, que é licenciada. O sistema a usa se estiver instalada na máquina do usuário e, caso contrário, recorre a Segoe UI / Roboto / Helvetica / Arial.
+
+### Nome do sistema
+
+Instalações novas já nascem com o título "Acervo Cidadão" e o subtítulo "Biblioteca da Secretaria da Justiça e Cidadania do Paraná". Em instalações existentes, ajuste em *Administração > Configurações*.
+
+Os textos da página inicial em português são regravados uma única vez pela atualização `seju-1.0.0` (`biblivre.update.seju_1_0_0.Update`) e continuam editáveis em *Administração > Traduções*.
+
+### Segurança
+
+**Senhas de usuários.** Passam a ser gravadas com PBKDF2-HMAC-SHA256, 210.000 iterações e sal aleatório de 16 bytes, no formato `pbkdf2_sha256$iterações$sal$hash`. Antes eram SHA-1 sem sal.
+
+- Não há migração manual: as senhas antigas continuam válidas e cada uma é convertida no primeiro login bem-sucedido do usuário.
+- Arquivos: `biblivre/core/utils/TextUtils.java`, `biblivre/login/LoginDAO.java`, `biblivre/login/LoginBO.java`.
+- Depois da conversão, o banco não pode voltar para uma versão sem esta alteração (o Biblivre original não reconhece o novo formato).
+
+**Senha do banco de dados.** Os utilitários `pg_dump`/`psql` (backup, restauração, criação de bibliotecas) deixaram de usar a senha fixa no código. A senha é lida, nesta ordem, de:
+
+1. propriedade de sistema `biblivre.db.password` (ex.: `-Dbiblivre.db.password=...` em `CATALINA_OPTS`);
+2. variável de ambiente `BIBLIVRE_DB_PASSWORD`;
+3. valor padrão do Biblivre, se nenhuma das duas existir.
+
+Em produção:
+
+1. troque a senha do usuário `biblivre` no PostgreSQL (`ALTER ROLE biblivre PASSWORD '...'`);
+2. coloque a mesma senha em `WebContent/META-INF/context.xml` (três ocorrências de `dataSource.password`);
+3. defina `BIBLIVRE_DB_PASSWORD` no serviço do Tomcat;
+4. troque a senha do usuário `admin` do sistema no primeiro acesso.
+
+## Verificação feita e pendências
+
+- O tema foi compilado com dart-sass 1.72.0 (mesma versão do build) e conferido em navegador com uma página estática que reproduz cabeçalho, menu, botões e rodapé.
+- O código de senhas foi testado isoladamente, inclusive contra o hash do `admin` padrão do `sql/biblivre4.sql`.
+- **O build Maven completo e o sistema em execução (Tomcat + PostgreSQL) não foram testados** no ambiente em que as alterações foram feitas. Rode `mvn clean package`, suba em homologação e valide login, troca de senha, backup e restauração antes de publicar.
+- O layout continua com largura fixa de 782 px, como no Biblivre original; não há versão para celular.

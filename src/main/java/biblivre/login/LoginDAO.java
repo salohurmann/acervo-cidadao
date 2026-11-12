@@ -32,6 +32,7 @@ import biblivre.core.AbstractDAO;
 import biblivre.core.AbstractDTO;
 import biblivre.core.exceptions.DAOException;
 import biblivre.core.utils.Constants;
+import biblivre.core.utils.TextUtils;
 
 public class LoginDAO extends AbstractDAO {
 
@@ -73,22 +74,33 @@ public class LoginDAO extends AbstractDAO {
 			StringBuilder sql = new StringBuilder();
 			
 			if (this.getSchema().equals(Constants.GLOBAL_SCHEMA)) {
-				sql.append("SELECT id, login, employee, login as name FROM logins ");
-				sql.append("WHERE login = ? and password = ?;");
+				sql.append("SELECT id, login, employee, password, login as name FROM logins ");
+				sql.append("WHERE login = ?;");
 			} else {
-				sql.append("SELECT L.id, L.login, L.employee, coalesce(U.name, L.login) as name FROM logins L ");
+				sql.append("SELECT L.id, L.login, L.employee, L.password, coalesce(U.name, L.login) as name FROM logins L ");
 				sql.append("LEFT JOIN users U ON U.login_id = L.id ");
-				sql.append("WHERE L.login = ? and L.password = ?;");
+				sql.append("WHERE L.login = ?;");
 			}
 
 			PreparedStatement pst = con.prepareStatement(sql.toString());
 			pst.setString(1, login);
-			pst.setString(2, password);
 			
 			ResultSet rs = pst.executeQuery();
 
-			if (rs.next()) {
-				dto = this.populateDTO(rs);
+			String storedPassword = null;
+
+			while (dto == null && rs.next()) {
+				storedPassword = rs.getString("password");
+
+				if (TextUtils.passwordMatches(password, storedPassword)) {
+					dto = this.populateDTO(rs);
+				}
+			}
+
+			// Senhas no formato antigo (SHA-1 sem sal) são regravadas em PBKDF2
+			// no primeiro login bem-sucedido.
+			if (dto != null && TextUtils.isLegacyPasswordHash(storedPassword)) {
+				this.upgradePasswordHash(con, dto.getId(), TextUtils.encodePassword(password));
 			}
 		} catch (Exception e) {
 			throw new DAOException(e);
@@ -99,6 +111,18 @@ public class LoginDAO extends AbstractDAO {
 		return dto;
 	}
 	
+	private void upgradePasswordHash(Connection con, int loginId, String encodedPassword) {
+		try (PreparedStatement pst = con.prepareStatement("UPDATE logins SET password = ? WHERE id = ?;")) {
+			pst.setString(1, encodedPassword);
+			pst.setInt(2, loginId);
+			pst.executeUpdate();
+		} catch (Exception e) {
+			// A migração do hash nunca deve impedir o login; será tentada de
+			// novo no próximo acesso.
+			e.printStackTrace();
+		}
+	}
+
 	public boolean update(LoginDTO login) {
 		Connection con = null;
 		try {

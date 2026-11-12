@@ -65,8 +65,15 @@ a.button {
 }
 
 a.main_button {
-	@include button(#E5f04C, #CCDC43, #C0D23E, #A3B232);
+	@include button($gov-blue-soft, $gov-blue, #CDE6F5, $gov-blue-dark);
+	color: $gov-blue-darker;
 	text-shadow: none;
+
+	&.disabled {
+		color: $disabled-text-color;
+		background-color: $ui-background-color;
+		border-color: $ui-border-color;
+	}
 }
 
 a.danger_button {

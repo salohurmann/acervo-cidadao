@@ -24,8 +24,14 @@
 	text-align: right;
 	font-size: 12px;
 
-	line-height: 24px;
-	color: $aux-text-color;
+	line-height: 18px;
+	padding: 8px 0 10px 0;
+	color: $weak-text-color;
+
+	.orgao {
+		font-weight: bold;
+		color: $aux-text-color;
+	}
 }
 
 .page_title {

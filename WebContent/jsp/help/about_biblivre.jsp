@@ -11,6 +11,13 @@
 
 	<div class="biblivre_form">
 		<fieldset class="history">
+			<legend>Acervo Cidadão &ndash; SEJU</legend>
+
+			<p>O <strong>Acervo Cidadão</strong> é o sistema de gestão de bibliotecas da Secretaria da Justiça e Cidadania do Estado do Paraná (SEJU).</p>
+			<p>Trata-se de uma versão modificada do software livre <strong>Biblivre 5</strong>, adaptada em novembro de 2026 pela Unidade de Tecnologia (UTEC/SEJU): identidade visual do Governo do Paraná, armazenamento de senhas com PBKDF2 e senha do banco de dados configurável por variável de ambiente. O código-fonte desta versão é distribuído sob a mesma licença GPLv3 do projeto original, cujos créditos seguem abaixo.</p>
+		</fieldset>
+
+		<fieldset class="history">
 			<legend>Biblivre ${version}</legend>
 		
 			<p>A SABIN, sob a presidência do Dr. Jean-Louis de Lacerda Soares, propôs em meados de 2006 um projeto de desenvolvimento de uma nova versão ampliada do sistema de automação de bibliotecas BIBLIVRE.</p>

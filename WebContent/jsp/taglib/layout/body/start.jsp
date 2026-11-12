@@ -49,6 +49,14 @@
 	onsubmit="return false;"
 </c:set>
 
+<%-- Marca oficial: basta copiar o arquivo fornecido pela Comunicação para
+     static/images/marca_seju.png. Enquanto ele não existir, o cabeçalho usa a
+     assinatura em texto. --%>
+<%
+	pageContext.setAttribute("hasOfficialBrand",
+		Boolean.valueOf(application.getResource("/static/images/marca_seju.png") != null));
+%>
+
 <body>
 	<form id="page_submit" name="page_submit" method="post" ${isMultiPart ? pageScope.multiPartAttributes : pageScope.notMultiPartAttribute}>
 		<input type="hidden" name="controller" id="controller" value='${isMultiPart ? "json" : "jsp"}'>
@@ -56,49 +64,29 @@
 		<input type="hidden" name="action" id="action" value='${isLogged ? "logout" : "login"}'>
 
 		<div id="header">
-			<div id="logo_biblivre">
-				<a href="http://biblivre.org.br/" target="_blank">
-					<img src="static/images/logo_biblivre.png" width="117" height="66" alt="Biblivre V">
+			<div id="logo_biblivre" class="marca_seju">
+				<a href="https://www.justica.pr.gov.br/" target="_blank" rel="noopener" title="Secretaria da Justiça e Cidadania - Governo do Estado do Paraná">
+					<c:choose>
+						<c:when test="${hasOfficialBrand}">
+							<img src="static/images/marca_seju.png" alt="Secretaria da Justiça e Cidadania - Governo do Estado do Paraná">
+						</c:when>
+						<c:otherwise>
+							<span class="marca_estado">PARANÁ</span>
+							<span class="marca_governo">Governo do Estado</span>
+							<span class="marca_orgao">Justiça e Cidadania</span>
+						</c:otherwise>
+					</c:choose>
 				</a>
 			</div>
 
-<!-- APOIO -->
-
-<div id="logo_support" style="">
-	<div style="display: block;">     
-        <a href="https://www.gov.br/cultura/pt-br" target="_blank">
-          <img src="static/images/logo_lei_de_incentivo.png" width="88" height="66" alt="Lei de Incentivo à Cultura" 
-          title="Lei de Incentivo à Cultura">
-        </a> 
-    </div>
-    <div style="display: block;">
-        <img src="static/images/logo_pedro_i.png" width="88" height="66" alt="Organização Pedro I" title="Organização Pedro I">
-     </div>
-    <div style="display: block;">
-        <img src="static/images/logo_sabin.png" width="88" height="66" alt="SABIN" title="SABIN">
-      </div>
-      <div style="display: block;">
-        <a href="https://www.gov.br/bn/pt-br" target="_blank">
-          <img src="static/images/logo_biblioteca_nacional.png" width="88" height="66" alt="Biblioteca Nacional" title="Biblioteca Nacional">
-        </a>
-      </div>
-
-<!-- PATROCINADOR -->
-        
-</div>
-<div id="logo_sponsor" style="">
-      <a href="http://www.itaucultural.org.br/" target="_blank">
-        <img src="static/images/logo_itau.png" width="77" height="66" alt="Itaú Cultural" title="Itaú Cultural">
-      </a>
-      <div id="clock"></div>
-</div>
+			<%-- Âncoras usadas por Core.fixResize (biblivre.core.js). Os logotipos de
+			     apoiadores do projeto Biblivre estão creditados em Ajuda > Sobre. --%>
+			<div id="logo_support"></div>
+			<div id="logo_sponsor">
+				<div id="clock"></div>
+			</div>
 
 			<div id="title">
-				<div id="logo_biblivre_small">
-					<a href="http://biblivre.org.br/" target="_blank">
-						<img src="static/images/logo_biblivre_small.png" width="43" height="36" alt="Biblivre V">
-					</a>
-				</div>
 				<h1><a href="?"><%= Configurations.getString(schema, Constants.CONFIG_TITLE) %></a></h1>
 				<h2><%= Configurations.getHtml(schema, Constants.CONFIG_SUBTITLE) %></h2>
 			</div>
@@ -132,7 +120,7 @@
 										<menu:item module="multi_schema" action="multi_schema_backup"  />
 									</menu:level>
 									<menu:help />
-									<li style="padding-left: 450px;font-size: 16px;color:orange;"><%--Login multibiblioteca--%>
+									<li class="logged_user_name" style="padding-left: 450px;"><%--Login multibiblioteca--%>
 									  <c:out value="${name}"></c:out>
 									</li>
 									<menu:logout />
@@ -154,7 +142,7 @@
 										</menu:level>
 									</c:forEach>
 									<menu:help />
-									<li style="padding-left:40px;font-size: 16px;color:yellow;"><%--Login single --%>
+									<li class="logged_user_name" style="padding-left:40px;"><%--Login single --%>
 									  <c:out value="${name}"></c:out>
 									</li>
 									<menu:logout />	

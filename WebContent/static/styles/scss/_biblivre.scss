@@ -1,41 +1,61 @@
 @import "mixins";
 
+// ---------------------------------------------------------------------------
+// Paleta institucional - Governo do Estado do Parana / SEJU
+// Referencia: Manual de Identidade Visual dos Sites e Aplicativos do Governo
+// do Parana (jun/2021), secao "Secretarias". Para trocar a identidade do
+// sistema inteiro, altere apenas as variaveis $gov-* abaixo.
+// ---------------------------------------------------------------------------
+$gov-blue: #0072BB;
+$gov-blue-dark: #005A94;
+$gov-blue-darker: #00436E;
+$gov-blue-soft: #E3F1FA;
+$gov-cyan: #00AEEF;
+$gov-green: #009B54;
+$gov-green-dark: #068833;
+$gov-gray-bar: #F7F7F7;
+$gov-text: #333333;
+$gov-text-soft: #555555;
+$gov-text-weak: #666666;
+
+$font-stack: "Proxima Nova", "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
 $content-width: 782px;
-$body-background: #EBEBEB;
+$body-background: #EEF1F3;
 
-$aux-background: #F0F0F0;
-$aux-border-color: #BDBDBD;
+$aux-background: #F7F7F7;
+$aux-border-color: #C9D1D6;
 
-$main-text-color: #2A2A2A;
-$aux-text-color: #606060;
-$weak-text-color: #707070;
+$main-text-color: $gov-text;
+$aux-text-color: $gov-text-soft;
+$weak-text-color: $gov-text-weak;
 
-$disabled-text-color: #B0B0B0;
+$disabled-text-color: #A8B0B5;
 
 $paging-text-color: $main-text-color;
 
-$link-text-color: #44749D;
-$link-hover-text-color: #33688C;
+$link-text-color: $gov-blue;
+$link-hover-text-color: $gov-blue-dark;
 
-$separator-color: #A7A59F;
+$separator-color: #A7ADB1;
 
-$ui-background-color: #EBEBEB;
-$ui-border-color: #CFCFCF;
-$ui-hover-background-color: #D2D2D2; 
-$ui-hover-border-color: #B0B0B0;
+$ui-background-color: #EEF1F3;
+$ui-border-color: #CDD4D9;
+$ui-hover-background-color: #DCE3E8;
+$ui-hover-border-color: #A8B0B5;
 
 $list-odd-background: $aux-background;
-$list-buttons-odd-background: #DBDBDB;
-$list-even-background: #D5D5D5;
-$list-buttons-even-background: #CECECE;
+$list-buttons-odd-background: #E3E8EB;
+$list-even-background: #E6EAED;
+$list-buttons-even-background: #D8DEE2;
 
-$expander-background: #C6D4E1;
-$expander-text-color: #44749D;
+$expander-background: $gov-blue-soft;
+$expander-text-color: $gov-blue;
 
-$popup-border-color: #787F43;
+$popup-border-color: $gov-blue;
 $popup-background-color: $aux-background;
 
-$progress-background-color: $main-text-color;
-$progress-foreground-color: #C4D540;
+$progress-background-color: $gov-blue-darker;
+$progress-foreground-color: $gov-green;
 
-$form-border-color: #B3B3B3;
+$form-border-color: #B3BBC0;

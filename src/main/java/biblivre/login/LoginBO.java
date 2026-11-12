@@ -25,7 +25,6 @@ import biblivre.administration.permissions.PermissionBO;
 import biblivre.circulation.user.UserDTO;
 import biblivre.core.AbstractBO;
 import biblivre.core.AbstractDTO;
-import biblivre.core.utils.TextUtils;
 
 public class LoginBO extends AbstractBO {
 	private LoginDAO dao;
@@ -41,9 +40,9 @@ public class LoginBO extends AbstractBO {
 	}
 	
 	public final LoginDTO login(String login, String password) {
-		String encodedPassword = TextUtils.encodePassword(password);
-
-		return this.dao.login(login, encodedPassword);
+		// A senha segue em texto puro até o DAO: com sal aleatório o hash não
+		// pode mais ser comparado dentro do SQL.
+		return this.dao.login(login, password);
 	}
 	
 	public boolean update(LoginDTO login) {

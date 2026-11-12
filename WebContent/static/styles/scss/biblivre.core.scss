@@ -6,7 +6,7 @@ html, body {
 }
 
 body {
-	font: normal 14px/18px "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+	font: normal 14px/18px $font-stack; 
 
 	background: $body-background;
 	color: $main-text-color;

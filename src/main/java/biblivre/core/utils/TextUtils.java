@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -38,25 +39,117 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 public class TextUtils {
+	private static final String PBKDF2_PREFIX = "pbkdf2_sha256";
+	private static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256";
+	private static final int PBKDF2_ITERATIONS = 210000;
+	private static final int PBKDF2_SALT_BYTES = 16;
+	private static final int PBKDF2_KEY_BITS = 256;
+	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+	/**
+	 * Gera o hash de uma senha para armazenamento, no formato
+	 * <code>pbkdf2_sha256$iteracoes$sal$hash</code> (sal e hash em Base64).
+	 * Cada chamada usa um sal aleatório, portanto o resultado nunca deve ser
+	 * comparado por igualdade: use {@link #passwordMatches(String, String)}.
+	 */
 	public static String encodePassword(String password) {
+		if (StringUtils.isBlank(password)) {
+			throw new IllegalArgumentException("Password is null");
+		}
+
+		byte[] salt = new byte[PBKDF2_SALT_BYTES];
+		SECURE_RANDOM.nextBytes(salt);
+
+		byte[] hash = TextUtils.pbkdf2(password, salt, PBKDF2_ITERATIONS);
+
+		return PBKDF2_PREFIX + "$" + PBKDF2_ITERATIONS + "$"
+			+ Base64.getEncoder().encodeToString(salt) + "$"
+			+ Base64.getEncoder().encodeToString(hash);
+	}
+
+	/**
+	 * Formato antigo do Biblivre (SHA-1 sem sal, em Base64). Mantido apenas
+	 * para validar senhas gravadas antes da migração para PBKDF2.
+	 */
+	public static String legacyEncodePassword(String password) {
 		if (StringUtils.isBlank(password)) {
 			throw new IllegalArgumentException("Password is null");
 		}
 
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA");
-			md.update(password.getBytes("UTF-8"));
-			byte[] pass = Base64.getEncoder().encode(md.digest());
-			
-			return new String(pass);
-		} catch(Exception e) {
+			md.update(password.getBytes(StandardCharsets.UTF_8));
+
+			return Base64.getEncoder().encodeToString(md.digest());
+		} catch (Exception e) {
 			return "";
+		}
+	}
+
+	public static boolean isLegacyPasswordHash(String storedPassword) {
+		return storedPassword != null && !storedPassword.startsWith(PBKDF2_PREFIX + "$");
+	}
+
+	/**
+	 * Confere uma senha digitada contra o valor armazenado, aceitando tanto o
+	 * formato PBKDF2 quanto o formato antigo.
+	 */
+	public static boolean passwordMatches(String password, String storedPassword) {
+		if (StringUtils.isBlank(password) || StringUtils.isBlank(storedPassword)) {
+			return false;
+		}
+
+		try {
+			if (TextUtils.isLegacyPasswordHash(storedPassword)) {
+				String legacy = TextUtils.legacyEncodePassword(password);
+
+				return StringUtils.isNotBlank(legacy) && MessageDigest.isEqual(
+					legacy.getBytes(StandardCharsets.UTF_8),
+					storedPassword.getBytes(StandardCharsets.UTF_8));
+			}
+
+			String[] parts = storedPassword.split("\\$");
+
+			if (parts.length != 4) {
+				return false;
+			}
+
+			int iterations = Integer.parseInt(parts[1]);
+			byte[] salt = Base64.getDecoder().decode(parts[2]);
+			byte[] expected = Base64.getDecoder().decode(parts[3]);
+
+			if (iterations <= 0 || expected.length == 0) {
+				return false;
+			}
+
+			return MessageDigest.isEqual(expected, TextUtils.pbkdf2(password, salt, iterations, expected.length * 8));
+		} catch (RuntimeException e) {
+			return false;
+		}
+	}
+
+	private static byte[] pbkdf2(String password, byte[] salt, int iterations) {
+		return TextUtils.pbkdf2(password, salt, iterations, PBKDF2_KEY_BITS);
+	}
+
+	private static byte[] pbkdf2(String password, byte[] salt, int iterations, int keyBits) {
+		PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, keyBits);
+
+		try {
+			return SecretKeyFactory.getInstance(PBKDF2_ALGORITHM).generateSecret(spec).getEncoded();
+		} catch (Exception e) {
+			throw new IllegalStateException("PBKDF2 indisponível nesta JVM", e);
+		} finally {
+			spec.clearPassword();
 		}
 	}
 	

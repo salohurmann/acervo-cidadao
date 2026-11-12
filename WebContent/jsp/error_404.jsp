@@ -10,15 +10,19 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="google" content="notranslate" />
-	<title>Biblivre IV</title>
+	<title>Acervo Cidadão - SEJU</title>
 	<link rel="shortcut icon" type="image/x-icon" href="static/images/favicon.ico" />
 	<link rel="stylesheet" type="text/css" href="static/styles/biblivre.core.css" />
 </head>
 
 <body>
 	<div id="header">
-		<div id="logo_biblivre">
-			<a href="http://biblivre.org.br/" target="_blank"> <img src="static/images/logo_biblivre.png" width="117" height="66" alt="Biblivre V"></a>
+		<div id="logo_biblivre" class="marca_seju">
+			<a href="https://www.justica.pr.gov.br/" target="_blank" rel="noopener">
+				<span class="marca_estado">PARANÁ</span>
+				<span class="marca_governo">Governo do Estado</span>
+				<span class="marca_orgao">Justiça e Cidadania</span>
+			</a>
 		</div>
 	</div>
 	<div id="notifications">
