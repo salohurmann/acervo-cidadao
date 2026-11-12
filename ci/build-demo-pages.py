@@ -5,7 +5,9 @@ O painel do cadastro rápido é copiado de WebContent/jsp/cataloging/bibliograph
 para que a demonstração mostre sempre o mesmo formulário do sistema.
 Chamado por ci/build-demo.sh.
 """
+import hashlib
 import pathlib
+import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DOCS = ROOT / "docs"
@@ -81,7 +83,21 @@ def page(title, current, module, crumb, extra_css, body, scripts=""):
 '''
 
 
-(DOCS / "index.html").write_text(page(
+def versioned(html):
+    """Acrescenta ?v=<hash do conteúdo> aos arquivos locais, para que o
+    navegador não use CSS ou script antigo depois de uma atualização."""
+    def repl(match):
+        attr, path = match.group(1), match.group(2)
+        target = DOCS / path
+        if not target.is_file():
+            return match.group(0)
+        digest = hashlib.sha1(target.read_bytes()).hexdigest()[:10]
+        return f'{attr}="{path}?v={digest}"'
+
+    return re.sub(r'(href|src)="((?:static/|demo\.)[^"?]+\.(?:css|js))"', repl, html)
+
+
+(DOCS / "index.html").write_text(versioned(page(
     "Início", "inicio", "start", "<span>Início</span>",
     '\t<link rel="stylesheet" href="static/styles/biblivre.index.css">\n',
     '''				<div class="picture">
@@ -92,9 +108,9 @@ def page(title, current, module, crumb, extra_css, body, scripts=""):
 					<p>Esta demonstração mostra a identidade visual do sistema e o <strong>cadastro rápido de livros</strong>: informe o ISBN e os dados do livro são buscados automaticamente.</p>
 					<p class="home_shortcuts"><a class="main_button arrow_right" href="cadastro.html">Experimentar o cadastro rápido</a></p>
 				</div>
-				<div style="clear: both;"></div>'''), encoding="utf-8")
+				<div style="clear: both;"></div>''')), encoding="utf-8")
 
-(DOCS / "cadastro.html").write_text(page(
+(DOCS / "cadastro.html").write_text(versioned(page(
     "Cadastro rápido", "cadastro", "cataloging", "<span>Catalogação</span> &gt; <a>Bibliográfica</a>",
     '\t<link rel="stylesheet" href="static/styles/biblivre.search.css">\n'
     '\t<link rel="stylesheet" href="static/styles/biblivre.cataloging.css">\n',
@@ -117,6 +133,6 @@ def page(title, current, module, crumb, extra_css, body, scripts=""):
     '<script src="static/scripts/jquery.js"></script>\n'
     '<script src="static/scripts/biblivre.cataloging.isbn_lookup.js"></script>\n'
     '<script src="static/scripts/biblivre.cataloging.quick_add.js"></script>\n'
-    '<script src="demo.js"></script>\n'), encoding="utf-8")
+    '<script src="demo.js"></script>\n')), encoding="utf-8")
 
 print("páginas da demonstração geradas")
