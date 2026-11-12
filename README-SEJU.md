@@ -81,6 +81,13 @@ Em produção:
 3. defina `BIBLIVRE_DB_PASSWORD` no serviço do Tomcat;
 4. troque a senha do usuário `admin` do sistema no primeiro acesso.
 
+## Demonstração estática (GitHub Pages)
+
+A pasta `docs/` contém uma demonstração das telas que funciona sem servidor e sem banco: página inicial e cadastro rápido de livro. Ela usa o CSS compilado do tema e o script real do cadastro rápido, com o servidor simulado em `docs/demo.js`. Não há login e nada é gravado; os livros digitados ficam só na memória da página.
+
+- Publicação: no repositório, *Settings > Pages > Deploy from a branch*, branch `main`, pasta `/docs`.
+- Depois de alterar o tema ou o cadastro rápido, regere os arquivos com `sh ci/build-demo.sh`.
+
 ## Hospedagem (Docker)
 
 O `Dockerfile` gera uma imagem única com Tomcat 9 e PostgreSQL. O banco roda dentro do contêiner, acessível só por ele, porque o Biblivre usa `pg_dump`/`psql` locais e endereço fixo `127.0.0.1`. Na primeira execução o banco é criado automaticamente.

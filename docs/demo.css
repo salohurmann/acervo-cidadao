@@ -1,0 +1,20 @@
+/* Ajustes só da demonstração estática (GitHub Pages). */
+html, body { overflow: visible; }
+#content_outer { overflow: visible; }
+#demo_banner {
+	background: #00436E;
+	color: #FFFFFF;
+	font-size: 13px;
+	line-height: 18px;
+	padding: 6px 12px;
+	text-align: center;
+}
+#demo_banner strong { color: #FFFFFF; }
+#menu > ul > li > a { color: #FFFFFF; text-decoration: none; }
+#menu > ul > li.current { background: #005A94; }
+#demo_list { margin-top: 15px; }
+#demo_list table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#demo_list th, #demo_list td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #C9D1D6; }
+#demo_list th { background: #E3F1FA; color: #00436E; }
+#demo_list .empty { color: #666666; padding: 10px; }
+#quick_add { display: block; }

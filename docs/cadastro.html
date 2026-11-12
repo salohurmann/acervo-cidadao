@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=820">
+	<meta name="robots" content="noindex">
+	<title>Cadastro rápido - Acervo Cidadão (demonstração)</title>
+	<link rel="shortcut icon" type="image/x-icon" href="static/images/favicon.ico">
+	<link rel="stylesheet" href="static/styles/biblivre.core.css">
+	<link rel="stylesheet" href="static/styles/biblivre.search.css">
+	<link rel="stylesheet" href="static/styles/biblivre.cataloging.css">
+	<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div id="demo_banner"><strong>Demonstração das telas.</strong> Esta página não é o sistema em produção: não há login e nada do que for digitado é gravado.</div>
+<form>
+	<div id="header">
+		<div id="logo_biblivre" class="marca_seju">
+			<a href="index.html">
+				<span class="marca_estado">PARANÁ</span>
+				<span class="marca_governo">Governo do Estado</span>
+				<span class="marca_orgao">Justiça e Cidadania</span>
+			</a>
+		</div>
+		<div id="logo_support"></div>
+		<div id="logo_sponsor"></div>
+		<div id="title">
+			<h1><a href="index.html">Acervo Cidadão</a></h1>
+			<h2>Biblioteca da Secretaria da Justiça</h2>
+		</div>
+		<div id="menu">
+			<ul>
+				<li class="menu_start"><a href="index.html">Início</a></li>
+				<li class="menu_cataloging current"><a href="cadastro.html">Catalogação</a></li>
+			</ul>
+			<div id="slider_area"></div>
+		</div>
+	</div>
+
+	<div id="notifications" class="notifications_cataloging">
+		<div id="messages"></div>
+		<div id="breadcrumb"><span>Catalogação</span> &gt; <a>Bibliográfica</a></div>
+	</div>
+
+	<div id="content_outer">
+		<div id="content">
+			<div id="content_inner">
+				<div id="database_selection" style="position: relative; margin-top: 0; height: auto;">
+					<div class="title">Base de dados: Principal</div>
+					<div class="count" id="database_count" style="float: right; padding-top: 6px;"></div>
+					<div class="clear"></div>
+				</div>
+		<div id="quick_add" class="biblivre_form submit_on_enter">
+					<fieldset>
+						<legend>Cadastro rápido de livro</legend>
+						<div class="form_help form_help_cataloging">
+							Só o <strong>título</strong> é obrigatório. Preencha o que souber e salve: o livro e os exemplares são criados de uma vez, e o formulário fica pronto para o próximo. Para completar os dados depois, pesquise o livro e use <em>Editar</em>.
+						</div>
+						<div class="fields">
+							<div class="field">
+								<div class="label">Título *</div>
+								<div class="value"><input type="text" name="quick_title" class="finput" autocomplete="off" maxlength="500"></div>
+								<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field">
+								<div class="label">Subtítulo</div>
+								<div class="value"><input type="text" name="quick_subtitle" class="finput" autocomplete="off" maxlength="500"></div>
+								<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field">
+								<div class="label">Autor</div>
+								<div class="value"><input type="text" name="quick_author" class="finput" autocomplete="off" maxlength="300" placeholder="Assis, Machado de"></div>
+								<div class="extra"><span class="quick_hint">Sobrenome, Nome</span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field">
+								<div class="label">Editora</div>
+								<div class="value"><input type="text" name="quick_publisher" class="finput" autocomplete="off" maxlength="300"></div>
+								<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field quick_short">
+								<div class="label">Cidade</div>
+								<div class="value"><input type="text" name="quick_place" class="finput" autocomplete="off" maxlength="200"></div>
+								<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field quick_short">
+								<div class="label">Ano</div>
+								<div class="value"><input type="text" name="quick_year" class="finput" autocomplete="off" maxlength="4" inputmode="numeric"></div>
+								<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field quick_short">
+								<div class="label">Edição</div>
+								<div class="value"><input type="text" name="quick_edition" class="finput" autocomplete="off" maxlength="100"></div>
+								<div class="extra"><span class="quick_hint">ex.: 2. ed.</span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field quick_short">
+								<div class="label">ISBN</div>
+								<div class="value"><input type="text" name="quick_isbn" class="finput" autocomplete="off" maxlength="20"></div>
+								<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field">
+								<div class="label">Assunto</div>
+								<div class="value"><input type="text" name="quick_subject" class="finput" autocomplete="off" maxlength="300"></div>
+								<div class="extra"><span class="quick_hint">ex.: Direito constitucional</span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field quick_short">
+								<div class="label">Localização na estante</div>
+								<div class="value"><input type="text" name="quick_location" class="finput" autocomplete="off" maxlength="100"></div>
+								<div class="extra"><span class="quick_hint">ex.: 342 S586c</span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+							<div class="field quick_short">
+								<div class="label">Quantidade de exemplares</div>
+								<div class="value"><input type="text" name="quick_copies" class="finput" autocomplete="off" maxlength="2" inputmode="numeric" value="1"></div>
+								<div class="extra"><span class="quick_hint">0 = cadastrar sem exemplares</span><span class="quick_error"></span></div>
+								<div class="clear"></div>
+							</div>
+						</div>
+						<div class="buttons">
+							<a class="main_button center" onclick="QuickAdd.save();">Salvar e cadastrar outro</a>
+							<a class="button center" onclick="QuickAdd.close();">Fechar</a>
+						</div>
+					</fieldset>
+				</div>
+
+				<div id="demo_list" class="biblivre_form">
+					<fieldset>
+						<legend>Livros cadastrados nesta demonstração</legend>
+						<table>
+							<thead><tr><th>Título</th><th>Autor</th><th>Ano</th><th>Exemplares</th></tr></thead>
+							<tbody id="demo_list_body"></tbody>
+						</table>
+					</fieldset>
+				</div>
+			</div>
+		</div>
+		<div id="copyright">
+			<span class="orgao">Secretaria da Justiça e Cidadania</span> &middot; Governo do Estado do Paraná<br>
+			Sistema baseado no <a href="http://biblivre.org.br" target="_blank" rel="noopener">Biblivre</a>, software livre sob licença GPLv3
+		</div>
+	</div>
+</form>
+<script src="static/scripts/jquery.js"></script>
+<script src="static/scripts/biblivre.cataloging.quick_add.js"></script>
+<script src="demo.js"></script>
+</body>
+</html>
