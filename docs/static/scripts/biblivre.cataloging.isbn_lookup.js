@@ -9,34 +9,46 @@
  * Consulta de dados de um livro pelo ISBN.
  *
  * A consulta é feita pelo navegador de quem está cadastrando, em bases
- * públicas e gratuitas, sem chave de acesso: primeiro a BrasilAPI (que reúne
- * CBL, Mercado Editorial, Open Library e Google Books) e, se ela não achar,
- * o Google Books diretamente. Só o número do ISBN é enviado.
+ * públicas e gratuitas, sem chave de acesso. Só o número do ISBN é enviado.
+ *
+ * As bases são consultadas ao mesmo tempo e os resultados são combinados na
+ * ordem de preferência abaixo, porque nenhuma delas é completa sozinha: a
+ * CBL cobre quase todo livro brasileiro, mas costuma trazer só título (em
+ * maiúsculas) e editora; a Open Library e o Mercado Editorial trazem autores,
+ * ano e cidade; o Google Books sem chave tem cota diária compartilhada e
+ * frequentemente recusa a consulta, por isso fica por último.
  */
 var IsbnLookup = {
 	timeout: 12000,
 
 	sources: [
 		{
-			name: 'BrasilAPI',
+			name: 'Mercado Editorial',
+			portuguese: true,
 			url: function(isbn) {
-				return 'https://brasilapi.com.br/api/isbn/v1/' + isbn;
+				return 'https://brasilapi.com.br/api/isbn/v1/' + isbn + '?providers=mercado-editorial';
 			},
 			parse: function(json) {
-				if (!json || !json.title) {
-					return null;
-				}
-
-				return {
-					title: json.title,
-					subtitle: json.subtitle,
-					authors: json.authors,
-					publisher: json.publisher,
-					place: json.location,
-					year: json.year,
-					subjects: json.subjects,
-					source: IsbnLookup.providerName(json.provider)
-				};
+				return IsbnLookup.parseBrasilApi(json);
+			}
+		},
+		{
+			name: 'Open Library',
+			url: function(isbn) {
+				return 'https://brasilapi.com.br/api/isbn/v1/' + isbn + '?providers=open-library';
+			},
+			parse: function(json) {
+				return IsbnLookup.parseBrasilApi(json);
+			}
+		},
+		{
+			name: 'Câmara Brasileira do Livro',
+			portuguese: true,
+			url: function(isbn) {
+				return 'https://brasilapi.com.br/api/isbn/v1/' + isbn + '?providers=cbl';
+			},
+			parse: function(json) {
+				return IsbnLookup.parseBrasilApi(json);
 			}
 		},
 		{
@@ -57,22 +69,26 @@ var IsbnLookup = {
 					authors: info.authors,
 					publisher: info.publisher,
 					year: info.publishedDate,
-					subjects: info.categories,
-					source: 'Google Books'
+					subjects: info.categories
 				};
 			}
 		}
 	],
 
-	providerName: function(provider) {
-		var names = {
-			'cbl': 'Câmara Brasileira do Livro',
-			'mercado-editorial': 'Mercado Editorial',
-			'open-library': 'Open Library',
-			'google-books': 'Google Books'
-		};
+	parseBrasilApi: function(json) {
+		if (!json || !json.title) {
+			return null;
+		}
 
-		return names[provider] || 'BrasilAPI';
+		return {
+			title: json.title,
+			subtitle: json.subtitle,
+			authors: json.authors,
+			publisher: json.publisher,
+			place: json.location,
+			year: json.year,
+			subjects: json.subjects
+		};
 	},
 
 	// Devolve o ISBN só com dígitos (e X final no ISBN-10), ou '' se inválido.
@@ -146,7 +162,16 @@ var IsbnLookup = {
 		return surname.join(' ') + ', ' + parts.join(' ');
 	},
 
-	// Deixa o resultado no formato usado pelo cadastro rápido.
+	isUpperCase: function(text) {
+		return /[A-ZÀ-Ý]/.test(text) && text == text.toUpperCase();
+	},
+
+	// "AS ILUSOES ARMADAS" -> "As ilusoes armadas"
+	sentenceCase: function(text) {
+		return text.charAt(0).toUpperCase() + text.substring(1).toLowerCase();
+	},
+
+	// Deixa o resultado de uma base no formato usado pelo cadastro rápido.
 	clean: function(book) {
 		var text = function(value) {
 			return $.trim(String(value == null ? '' : value).replace(/\s+/g, ' '));
@@ -176,53 +201,133 @@ var IsbnLookup = {
 
 		var year = text(book.year).match(/\d{4}/);
 
+		// "[São Paulo, Brasil]" -> "São Paulo"
+		var place = text(text(book.place).replace(/[\[\]]/g, '').split(',')[0]);
+
+		if (this.isUpperCase(place)) {
+			place = place.toLowerCase().replace(/(^|\s)(\S)/g, function(m, space, letter) {
+				return space + letter.toUpperCase();
+			});
+		}
+
 		return {
 			title: text(book.title),
 			subtitle: text(book.subtitle),
 			authors: authors,
 			publisher: text(book.publisher),
-			place: text(book.place),
+			place: place,
 			year: year ? year[0] : '',
-			subject: list(book.subjects)[0] || '',
-			source: text(book.source)
+			subject: list(book.subjects)[0] || ''
 		};
+	},
+
+	// Combina os resultados na ordem de preferência das bases: cada campo
+	// vem da primeira base que o tiver. results[i] corresponde a sources[i].
+	merge: function(results) {
+		var merged = { title: '', subtitle: '', authors: [], publisher: '', place: '', year: '', subject: '', source: '' };
+		var used = [];
+		var upperTitle = '';
+		var upperSource = '';
+
+		for (var i = 0; i < results.length; i++) {
+			if (!results[i]) {
+				continue;
+			}
+
+			var book = this.clean(results[i]);
+			var contributed = false;
+
+			if (!merged.title && book.title) {
+				if (this.isUpperCase(book.title)) {
+					// Título todo em maiúsculas só é usado se nenhuma base tiver melhor.
+					if (!upperTitle) {
+						upperTitle = book.title;
+						upperSource = this.sources[i].name;
+					}
+				} else {
+					merged.title = book.title;
+					merged.subtitle = book.subtitle;
+					contributed = true;
+				}
+			}
+
+			if (merged.authors.length == 0 && book.authors.length > 0) {
+				merged.authors = book.authors;
+				contributed = true;
+			}
+
+			var names = ['publisher', 'place', 'year'];
+
+			for (var j = 0; j < names.length; j++) {
+				if (!merged[names[j]] && book[names[j]]) {
+					merged[names[j]] = book[names[j]];
+					contributed = true;
+				}
+			}
+
+			// Assunto só de bases em português; as demais trazem termos em inglês.
+			if (!merged.subject && book.subject && this.sources[i].portuguese) {
+				merged.subject = book.subject;
+				contributed = true;
+			}
+
+			if (contributed) {
+				used.push(this.sources[i].name);
+			}
+		}
+
+		if (!merged.title && upperTitle) {
+			merged.title = this.sentenceCase(upperTitle);
+
+			if ($.inArray(upperSource, used) == -1) {
+				used.push(upperSource);
+			}
+		}
+
+		if (!merged.title) {
+			return null;
+		}
+
+		merged.source = used.join(', ');
+
+		return merged;
 	},
 
 	// callback(book) quando encontra; callback(null, motivo) quando não.
 	// motivo: 'not_found' (nenhuma base tem o ISBN) ou 'unavailable' (sem conexão).
 	lookup: function(isbn, callback) {
-		var index = 0;
-		var reachedAny = false;
 		var self = this;
+		var results = [];
+		var pending = this.sources.length;
+		var reachedAny = false;
 
-		var next = function() {
-			if (index >= self.sources.length) {
-				callback(null, reachedAny ? 'not_found' : 'unavailable');
-				return;
-			}
-
-			var source = self.sources[index++];
+		var request = function(index) {
+			var source = self.sources[index];
 
 			self.getJson(source.url(isbn), function(json, reached) {
 				reachedAny = reachedAny || reached;
 
-				var book = null;
-
 				try {
-					book = json ? source.parse(json) : null;
+					results[index] = json ? source.parse(json) : null;
 				} catch (e) {
-					book = null;
+					results[index] = null;
 				}
 
-				if (book) {
-					callback(self.clean(book));
-				} else {
-					next();
+				if (--pending == 0) {
+					var book = self.merge(results);
+
+					if (book) {
+						callback(book);
+					} else {
+						callback(null, reachedAny ? 'not_found' : 'unavailable');
+					}
 				}
 			});
 		};
 
-		next();
+		for (var i = 0; i < this.sources.length; i++) {
+			request(i);
+		}
 	},
 
 	// done(json, reached): json nulo em erro; reached indica se o servidor respondeu.

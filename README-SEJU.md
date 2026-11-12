@@ -54,7 +54,7 @@ Em *Catalogação > Bibliográfica* há um botão **Cadastro rápido** (e, para 
 - O registro é gravado no mesmo formato MARC do formulário completo (campos 020, 090, 100, 245, 250, 260, 650 e 700) e pode ser complementado depois em *Editar*.
 - Não há código novo no servidor: a tela usa as ações `save` e `create_automatic_holding` que o Biblivre já tinha, com as mesmas permissões.
 
-A consulta por ISBN é feita pelo navegador de quem cadastra, em bases públicas e sem chave de acesso: primeiro a BrasilAPI (que reúne Câmara Brasileira do Livro, Mercado Editorial, Open Library e Google Books) e, se ela não achar, o Google Books. Só o número do ISBN sai da rede da Secretaria. Se a rede bloquear esses endereços (`brasilapi.com.br` e `www.googleapis.com`), o formulário avisa e segue funcionando com preenchimento manual.
+A consulta por ISBN é feita pelo navegador de quem cadastra, em bases públicas e sem chave de acesso: Mercado Editorial, Open Library e Câmara Brasileira do Livro (as três pela BrasilAPI) e Google Books. Elas são consultadas ao mesmo tempo e os resultados são combinados, porque nenhuma é completa sozinha: a CBL cobre quase todo livro brasileiro, mas costuma trazer só título e editora; o Google Books sem chave tem cota diária e muitas vezes recusa a consulta. Só o número do ISBN sai da rede da Secretaria. Se a rede bloquear esses endereços (`brasilapi.com.br` e `www.googleapis.com`), o formulário avisa e segue funcionando com preenchimento manual.
 
 Arquivos: `WebContent/jsp/cataloging/bibliographic.jsp`, `WebContent/static/scripts/biblivre.cataloging.quick_add.js`, `WebContent/static/scripts/biblivre.cataloging.isbn_lookup.js`, `WebContent/static/styles/scss/biblivre.cataloging.scss`, `WebContent/jsp/index.jsp`.
 

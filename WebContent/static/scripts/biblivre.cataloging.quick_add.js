@@ -235,7 +235,7 @@ var QuickAdd = {
 			this.setExtraAuthors(book.authors.slice(1));
 		}
 
-		this.setStatus('Dados encontrados (' + (book.source || 'base pública') + '). Confira e salve.', 'ok');
+		this.setStatus('Dados encontrados em: ' + (book.source || 'base pública') + '. Confira e salve.', 'ok');
 		this.input('quick_copies').focus().select();
 	},
 
