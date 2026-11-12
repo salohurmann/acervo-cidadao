@@ -48,6 +48,7 @@ import biblivre.core.schemas.SchemasDAO;
 import biblivre.core.translations.Translations;
 import biblivre.core.utils.Constants;
 import biblivre.core.utils.FileIOUtils;
+import biblivre.login.GoogleLogin;
 
 public final class SchemaServlet extends HttpServlet {
 
@@ -145,6 +146,13 @@ public final class SchemaServlet extends HttpServlet {
 		} else if (StringUtils.isBlank(controller) && (xRequest.getBoolean("force_setup") || Configurations.getBoolean(xRequest.getSchema(), Constants.CONFIG_NEW_LIBRARY))) {
 			xRequest.setAttribute("module", "menu");
 			xRequest.setAttribute("action", "setup");
+			controller = "jsp";
+		}
+
+		// Retorno do login com Google: {base}sso/google-callback
+		if (GoogleLogin.CALLBACK_CONTROLLER.equals(controller)) {
+			xRequest.setAttribute("module", "login");
+			xRequest.setAttribute("action", "google_callback");
 			controller = "jsp";
 		}
 

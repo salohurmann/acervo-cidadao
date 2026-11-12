@@ -27,6 +27,8 @@ until curl -fsS "$BASE" -o /tmp/home.html 2> /dev/null; do
 	sleep 5
 done
 grep -q "Secretaria da Justi" /tmp/home.html || fail "a página inicial não tem o rodapé da SEJU"
+grep -q 'name="password"' /tmp/home.html || fail "a página inicial não mostra o login (assistente de instalação aberto?)"
+grep -q "Acervo Cidad" /tmp/home.html || fail "a página inicial não mostra o título do Acervo Cidadão"
 echo "ok  página inicial"
 
 login() {

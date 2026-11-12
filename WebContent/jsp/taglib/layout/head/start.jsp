@@ -9,6 +9,20 @@
 
 <jsp:useBean id="schema" type="java.lang.String" scope="request" />
 
+<%-- Mensagem deixada na sessão por uma ação que terminou em redirecionamento
+     (login com Google). É exibida uma única vez. --%>
+<%
+	Object flashMessage = session.getAttribute("acervo.flash_message");
+
+	if (flashMessage != null) {
+		request.setAttribute("message", flashMessage);
+		request.setAttribute("message_level", session.getAttribute("acervo.flash_level"));
+		request.setAttribute("messageLevel", session.getAttribute("acervo.flash_level"));
+		session.removeAttribute("acervo.flash_message");
+		session.removeAttribute("acervo.flash_level");
+	}
+%>
+
 <!doctype html>
 	<html class="noscript">
 			<head>

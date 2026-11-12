@@ -78,6 +78,8 @@ public class AuthorizationPoints implements Serializable {
 
 		this.addAuthPoint("login", "login", AuthorizationPointTypes.LOGIN);
 		this.addAuthPoint("login", "logout", AuthorizationPointTypes.LOGIN);
+		this.addAuthPoint("login", "google_start", AuthorizationPointTypes.LOGIN);
+		this.addAuthPoint("login", "google_callback", AuthorizationPointTypes.LOGIN);
 		this.addAuthPoint("login", "change_password", AuthorizationPointTypes.LOGIN_CHANGE_PASSWORD);
 
 		this.addAuthPoint("menu", "list_bibliographic", AuthorizationPointTypes.MENU_SEARCH);

@@ -37,3 +37,6 @@ jobs:
 
       - name: Smoke test (página inicial, login, cadastro de livro)
         run: sh ci/smoke-test.sh acervo-cidadao:ci
+
+      - name: Smoke test (banco externo e login com Google)
+        run: sh ci/smoke-test-google.sh acervo-cidadao:ci

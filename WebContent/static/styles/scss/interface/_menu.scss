@@ -328,6 +328,16 @@ $notifications-border-color: #C9D1D6;
 		cursor: pointer;
 	}
 
+	.google_login a {
+		color: $menu-text-color;
+		font-weight: bold;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
 	.logged_user_name {
 		color: $menu-text-color;
 		font-size: 14px;

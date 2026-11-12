@@ -1,9 +1,15 @@
-# Acervo Cidadão (SEJU) - imagem única com Tomcat e PostgreSQL.
+# Acervo Cidadão (SEJU) - imagem com Tomcat e, opcionalmente, PostgreSQL.
 #
-# O Biblivre chama pg_dump/psql locais e conecta em 127.0.0.1:5432 com nomes
-# fixos de banco e usuário; por isso o PostgreSQL roda dentro do mesmo
-# contêiner e não fica exposto para fora. Os dados ficam em /data: monte um
-# volume nesse caminho para que sobrevivam a novos deploys.
+# Dois modos de banco, escolhidos pela variável ACERVO_DB:
+#
+#   local    (padrão) O PostgreSQL roda dentro do contêiner e guarda os dados
+#            em /data; monte um volume nesse caminho.
+#   external O banco é um PostgreSQL de fora, como o Cloud SQL. O Biblivre
+#            sempre conecta em 127.0.0.1:5432, então o contêiner faz a ponte:
+#            com CLOUD_SQL_INSTANCE definido, liga essa porta ao soquete que o
+#            Cloud Run monta em /cloudsql/<instância>.
+#
+# Variáveis: ver docker/entrypoint.sh e README-SEJU.md.
 
 # ---------- build ----------
 FROM maven:3.9-eclipse-temurin-8 AS build
@@ -18,11 +24,18 @@ RUN mvn -B -DskipTests clean package
 FROM tomcat:9.0-jdk8-temurin
 
 RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends postgresql postgresql-client \
+ && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends postgresql postgresql-client socat \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /usr/local/tomcat/webapps/*
 
-COPY --from=build /src/target/Biblivre5x.war /usr/local/tomcat/webapps/acervo.war
+# O WAR é aberto na construção para que o entrypoint possa ajustar a senha
+# do banco em META-INF/context.xml antes de o Tomcat subir.
+COPY --from=build /src/target/Biblivre5x.war /tmp/acervo.war
+RUN mkdir -p /usr/local/tomcat/webapps/acervo \
+ && cd /usr/local/tomcat/webapps/acervo \
+ && jar xf /tmp/acervo.war \
+ && rm /tmp/acervo.war
+
 COPY sql /opt/acervo/sql
 COPY docker/root-index.html /usr/local/tomcat/webapps/ROOT/index.html
 COPY docker/entrypoint.sh /opt/acervo/entrypoint.sh

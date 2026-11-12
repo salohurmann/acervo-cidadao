@@ -41,6 +41,11 @@ import org.json.JSONObject;
 import biblivre.administration.backup.BackupBO;
 import biblivre.administration.backup.BackupDTO;
 import biblivre.administration.indexing.IndexingBO;
+import biblivre.administration.usertype.UserTypeBO;
+import biblivre.administration.usertype.UserTypeDTO;
+import biblivre.circulation.user.UserBO;
+import biblivre.circulation.user.UserDTO;
+import biblivre.circulation.user.UserStatus;
 import biblivre.core.AbstractHandler;
 import biblivre.core.ExtendedRequest;
 import biblivre.core.ExtendedResponse;
@@ -52,12 +57,20 @@ import biblivre.core.utils.Constants;
 import biblivre.core.utils.TextUtils;
 
 public class Handler extends AbstractHandler {
+	private final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Handler.class);
 
 	public void login(ExtendedRequest request, ExtendedResponse response) {
 		String schema = request.getSchema();
 
 		String username = request.getString("username");
 		String password = request.getString("password");
+
+		// Com o login pelo Google ativo, usuário e senha não são aceitos.
+		if (GoogleLogin.isEnabled()) {
+			this.message.setText(ActionResult.WARNING, "login.google.password_disabled");
+			this.jspURL = "/jsp/index.jsp";
+			return;
+		}
 
 		if (StringUtils.isBlank(username) || StringUtils.isBlank(password)) {
 			this.message.setText(ActionResult.WARNING, "login.access_denied");
@@ -86,6 +99,150 @@ public class Handler extends AbstractHandler {
 			this.jspURL = "/jsp/index.jsp";
 			return; 
 		}
+	}
+
+	/**
+	 * Início do login com conta Google: guarda um "state" aleatório na sessão
+	 * e manda o navegador para a tela de contas do Google.
+	 */
+	public void googleStart(ExtendedRequest request, ExtendedResponse response) {
+		String schema = request.getSchema();
+
+		if (!GoogleLogin.isEnabled()) {
+			this.message.setText(ActionResult.WARNING, "login.access_denied");
+			this.jspURL = "/jsp/index.jsp";
+			return;
+		}
+
+		String state = GoogleLogin.newState();
+		request.setSessionAttribute(schema, "google_oauth_state", state);
+
+		request.setAttribute("redirect_url", GoogleLogin.buildAuthorizationUrl(GoogleLogin.getCallbackUrl(request), state));
+		this.jspURL = "/jsp/redirect.jsp";
+	}
+
+	/**
+	 * Retorno do Google (endereço {base}sso/google-callback). Confere o
+	 * "state", troca o código pelos dados da conta, exige o domínio aceito e
+	 * abre a sessão. Sempre termina redirecionando para a página inicial; a
+	 * mensagem ao usuário segue pela sessão.
+	 */
+	public void googleCallback(ExtendedRequest request, ExtendedResponse response) {
+		String schema = request.getSchema();
+
+		request.setAttribute("redirect_url", GoogleLogin.getBaseUrl(request));
+		this.jspURL = "/jsp/redirect.jsp";
+
+		String expectedState = (String) request.getSessionAttribute(schema, "google_oauth_state");
+		request.getSession().removeAttribute(schema + ".google_oauth_state");
+
+		String state = request.getString("state");
+		String code = request.getString("code");
+
+		if (!GoogleLogin.isEnabled() || StringUtils.isBlank(expectedState) || !expectedState.equals(state) || StringUtils.isBlank(code)) {
+			_flash(request, ActionResult.WARNING, "login.google.error.failed");
+			return;
+		}
+
+		try {
+			GoogleLogin.Identity identity = GoogleLogin.exchangeCode(code, GoogleLogin.getCallbackUrl(request));
+
+			LoginDTO user = _findOrCreateGoogleUser(schema, identity);
+			user.setName(identity.getName());
+
+			AuthorizationBO authBo = AuthorizationBO.getInstance(schema);
+			AuthorizationPoints atps = authBo.getUserAuthorizationPoints(user);
+
+			_setAdmin(schema, user, atps);
+
+			if (GoogleLogin.isAdminEmail(identity.getEmail())) {
+				atps.setAdmin(true);
+			}
+
+			// Sessão nova para quem acabou de se autenticar, preservando o idioma.
+			Object language = request.getSessionAttribute(schema, "language");
+			request.getSession().invalidate();
+
+			if (language != null) {
+				request.setSessionAttribute(schema, "language", language);
+			}
+
+			_performChecks(request, schema, "", user, atps);
+
+			_populateSessionAttributes(request, schema, user, atps);
+
+			_flash(request, ActionResult.NORMAL, "login.welcome");
+		} catch (GoogleLogin.GoogleLoginException e) {
+			this.logger.warn("Login com Google recusado: " + e.getDetail());
+			_flash(request, ActionResult.WARNING, e.getMessage());
+		} catch (Exception e) {
+			this.logger.error("Falha no login com Google", e);
+			_flash(request, ActionResult.WARNING, "login.google.error.failed");
+		}
+	}
+
+	/**
+	 * Login correspondente ao e-mail da conta Google. No primeiro acesso a
+	 * pessoa é cadastrada como leitor; virar funcionário depende do
+	 * administrador (Circulação > Cadastro de usuários e Administração >
+	 * Permissões).
+	 */
+	private static LoginDTO _findOrCreateGoogleUser(String schema, GoogleLogin.Identity identity) throws GoogleLogin.GoogleLoginException {
+		LoginBO loginBo = LoginBO.getInstance(schema);
+		LoginDTO login = loginBo.get(identity.getEmail());
+
+		if (login != null) {
+			return login;
+		}
+
+		if (schema.equals(Constants.GLOBAL_SCHEMA)) {
+			throw new GoogleLogin.GoogleLoginException("login.google.error.failed", "primeiro acesso fora de uma biblioteca");
+		}
+
+		List<UserTypeDTO> types = UserTypeBO.getInstance(schema).list();
+
+		if (types == null || types.isEmpty()) {
+			throw new GoogleLogin.GoogleLoginException("login.google.error.failed", "não há tipo de usuário cadastrado");
+		}
+
+		// O tipo de menor id é o "Leitor" da instalação padrão.
+		int readerType = types.get(0).getId();
+
+		for (UserTypeDTO type : types) {
+			readerType = Math.min(readerType, type.getId());
+		}
+
+		UserDTO reader = new UserDTO();
+		reader.setName(identity.getName());
+		reader.setType(readerType);
+		reader.setStatus(UserStatus.ACTIVE);
+		reader.setCreatedBy(Constants.ADMIN_LOGGED_USER_ID);
+		reader.addField("email", identity.getEmail());
+
+		UserBO.getInstance(schema).save(reader);
+
+		LoginDTO newLogin = new LoginDTO();
+		newLogin.setLogin(identity.getEmail());
+		newLogin.setEmployee(false);
+		// Senha aleatória, que ninguém conhece: a entrada é só pelo Google.
+		newLogin.setEncPassword(TextUtils.encodePassword(GoogleLogin.newState()));
+		newLogin.setCreatedBy(Constants.ADMIN_LOGGED_USER_ID);
+
+		loginBo.save(newLogin, reader);
+
+		login = loginBo.get(identity.getEmail());
+
+		if (login == null) {
+			throw new GoogleLogin.GoogleLoginException("login.google.error.failed", "não foi possível cadastrar " + identity.getEmail());
+		}
+
+		return login;
+	}
+
+	// Mensagem exibida na próxima página (lida em jsp/taglib/layout/head/start.jsp).
+	private static void _flash(ExtendedRequest request, ActionResult level, String messageKey) {
+		request.setSessionAttribute("acervo.flash_message", request.getLocalizedText(messageKey));
+		request.setSessionAttribute("acervo.flash_level", level.name().toLowerCase());
 	}
 
 	public void logout(ExtendedRequest request, ExtendedResponse response) {
