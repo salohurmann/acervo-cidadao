@@ -115,9 +115,7 @@ O GitHub Actions constrói essa imagem a cada push e roda `ci/smoke-test.sh`: p�
 
 ## Verificação feita e pendências
 
-- O tema foi compilado com dart-sass 1.72.0 (mesma versão do build) e conferido em navegador com uma página estática que reproduz cabeçalho, menu, botões e rodapé.
-- O código de senhas foi testado isoladamente, inclusive contra o hash do `admin` padrão do `sql/biblivre4.sql`.
-- O cadastro rápido foi conferido só no visual e no JSON que envia; a gravação no servidor não foi exercitada.
-- O `Dockerfile` e o teste de fumaça foram escritos sem poder ser executados; a primeira execução real é a do GitHub Actions.
-- **O build Maven completo e o sistema em execução (Tomcat + PostgreSQL) não foram testados** no ambiente em que as alterações foram feitas. Rode `mvn clean package`, suba em homologação e valide login, troca de senha, cadastro rápido, backup e restauração antes de publicar.
+- A cada push o GitHub Actions compila o projeto (`mvn clean package`), monta a imagem Docker e roda `ci/smoke-test.sh` com o sistema de pé (Tomcat + PostgreSQL): página inicial, login do administrador, cadastro de um livro com exemplares pelo mesmo caminho do cadastro rápido, recusa de senha errada e segundo login com a senha já migrada para PBKDF2.
+- O tema e a demonstração estática foram conferidos em navegador.
+- Ainda não foram exercitados com o sistema rodando: a tela do cadastro rápido no navegador (só as chamadas que ela faz), troca de senha pela tela, backup e restauração, e o assistente de configuração inicial. Valide esses pontos em homologação antes de usar com dados reais.
 - O layout continua com largura fixa de 782 px, como no Biblivre original; não há versão para celular.
