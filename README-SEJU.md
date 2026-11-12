@@ -87,6 +87,26 @@ Em produção:
 3. defina `BIBLIVRE_DB_PASSWORD` no serviço do Tomcat;
 4. troque a senha do usuário `admin` do sistema no primeiro acesso.
 
+### Login com conta Google (@seju.pr.gov.br)
+
+Com `ACERVO_GOOGLE_CLIENT_ID` e `ACERVO_GOOGLE_CLIENT_SECRET` definidos, o sistema passa a aceitar **somente** login com conta Google do domínio institucional; usuário e senha do Biblivre deixam de funcionar (inclusive a senha padrão).
+
+- Contas pessoais (@gmail.com) e de outros domínios do Google Workspace são recusadas no servidor, pelo campo `hd` do Google e pelo sufixo do e-mail.
+- No primeiro acesso a pessoa é cadastrada automaticamente como **leitor** (pesquisa e reservas). Para virar funcionário, o administrador ajusta em *Circulação > Cadastro de usuários* e *Administração > Permissões*.
+- O e-mail em `ACERVO_ADMIN_EMAIL` (padrão `salomaohurmann@seju.pr.gov.br`) entra como administrador.
+
+| Variável | Para quê |
+| --- | --- |
+| `ACERVO_GOOGLE_CLIENT_ID` | ID do cliente OAuth, tipo "Aplicativo da Web" |
+| `ACERVO_GOOGLE_CLIENT_SECRET` | chave secreta do cliente |
+| `ACERVO_GOOGLE_DOMAIN` | domínio aceito (padrão `seju.pr.gov.br`) |
+| `ACERVO_ADMIN_EMAIL` | e-mail do administrador |
+| `ACERVO_PUBLIC_URL` | endereço público, ex. `https://exemplo.run.app/acervo/` |
+
+No cliente OAuth do Google Cloud, cadastre como URI de redirecionamento autorizado: `{ACERVO_PUBLIC_URL}sso/google-callback`.
+
+Arquivos: `biblivre/login/GoogleLogin.java`, `biblivre/login/Handler.java` (`googleStart`, `googleCallback`), `WebContent/WEB-INF/tags/menu/login.tag`, `WebContent/jsp/redirect.jsp`.
+
 ## Demonstração estática (GitHub Pages)
 
 A pasta `docs/` contém uma demonstração das telas que funciona sem servidor e sem banco: página inicial e cadastro rápido de livro. Ela usa o CSS compilado do tema e o script real do cadastro rápido, com o servidor simulado em `docs/demo.js`. Não há login e nada é gravado; os livros digitados ficam só na memória da página.
@@ -111,6 +131,15 @@ docker build -t acervo-cidadao .
 docker run -d -p 8080:8080 -v acervo-dados:/data acervo-cidadao
 ```
 
+Google Cloud (Cloud Run + Cloud SQL):
+
+1. Cloud SQL: instância PostgreSQL 16, banco `biblivre4` e usuário `biblivre` com senha só de letras, números e `. _ ~ -`.
+2. Cloud Run: serviço a partir deste repositório (Dockerfile), porta 8080, 1 GiB de memória, **no máximo 1 instância** (as sessões ficam na memória do servidor) e a instância do Cloud SQL adicionada em *Conexões*.
+3. Variáveis do serviço: `ACERVO_DB=external`, `CLOUD_SQL_INSTANCE=projeto:região:instância`, `BIBLIVRE_DB_PASSWORD`, e as do login com Google acima.
+4. Na primeira subida o contêiner cria as tabelas no Cloud SQL. O endereço é `https://<serviço>.run.app/acervo/`.
+
+No modo `external` os dados ficam no Cloud SQL, que tem backup automático próprio; o backup pela tela do Biblivre grava em disco temporário do contêiner e deve ser baixado na hora.
+
 Railway:
 
 1. *New Project > Deploy from GitHub repo* e escolha o repositório. O Railway detecta o `Dockerfile`.
@@ -118,11 +147,14 @@ Railway:
 3. Em *Settings > Networking*, gere o domínio público.
 4. Acesse `https://<domínio>/acervo/`, entre com o login do administrador e troque a senha.
 
-O GitHub Actions constrói essa imagem a cada push e roda `ci/smoke-test.sh`: página inicial, login, cadastro de um livro com exemplares, recusa de senha errada e segundo login com a senha já migrada.
+O contêiner já sobe com a instalação inicial concluída: o assistente de instalação do Biblivre, que funciona sem login, não fica exposto.
+
+O GitHub Actions constrói essa imagem a cada push e roda dois testes com o sistema de pé: `ci/smoke-test.sh` (banco interno e login por senha) e `ci/smoke-test-google.sh` (banco externo com usuário sem superusuário e login só com Google, usando um Google simulado).
 
 ## Verificação feita e pendências
 
 - A cada push o GitHub Actions compila o projeto (`mvn clean package`), monta a imagem Docker e roda `ci/smoke-test.sh` com o sistema de pé (Tomcat + PostgreSQL): página inicial, login do administrador, cadastro de um livro com exemplares pelo mesmo caminho do cadastro rápido, recusa de senha errada e segundo login com a senha já migrada para PBKDF2.
 - O tema e a demonstração estática foram conferidos em navegador.
+- O login com Google foi testado de ponta a ponta com um servidor que simula o Google (domínio aceito, contas recusadas, criação de leitor, administrador). A troca real com o Google só acontece no ambiente hospedado.
 - Ainda não foram exercitados com o sistema rodando: a tela do cadastro rápido no navegador (só as chamadas que ela faz), troca de senha pela tela, backup e restauração, e o assistente de configuração inicial. Valide esses pontos em homologação antes de usar com dados reais.
 - O layout continua com largura fixa de 782 px, como no Biblivre original; não há versão para celular.
