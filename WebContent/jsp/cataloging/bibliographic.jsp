@@ -19,6 +19,7 @@
 	<script type="text/javascript" src="static/scripts/biblivre.input.js"></script>
 	<script type="text/javascript" src="static/scripts/biblivre.cataloging.input.js"></script>
 	<script type="text/javascript" src="static/scripts/biblivre.holding.input.js"></script>
+	<script type="text/javascript" src="static/scripts/biblivre.cataloging.quick_add.js"></script>
 
 	<script type="text/javascript" src="static/scripts/<%= Fields.getFormFields((String) request.getAttribute("schema"), "biblio").getCacheFileName() %>"></script>
 	<script type="text/javascript" src="static/scripts/<%= Fields.getFormFields((String) request.getAttribute("schema"), "holding").getCacheFileName() %>"></script>
@@ -85,12 +86,95 @@
 			</select>
 
 			<div class="buttons">
+				<a class="main_button center" id="quick_add_button" onclick="QuickAdd.open();">Cadastro rápido</a>
 				<a class="button center" id="new_record_button" onclick="CatalogingInput.newRecord();"><i18n:text key="cataloging.bibliographic.button.new" /></a>
 			</div>
 
 			<div class="count" id="database_count"></div>
 
 			<div class="clear"></div>
+		</div>
+
+		<%-- Cadastro rápido de livro (versão SEJU). Ver static/scripts/biblivre.cataloging.quick_add.js --%>
+		<div id="quick_add" class="biblivre_form submit_on_enter" style="display: none;">
+			<fieldset>
+				<legend>Cadastro rápido de livro</legend>
+				<div class="form_help form_help_cataloging">
+					Só o <strong>título</strong> é obrigatório. Preencha o que souber e salve: o livro e os exemplares são criados de uma vez, e o formulário fica pronto para o próximo. Para completar os dados depois, pesquise o livro e use <em>Editar</em>.
+				</div>
+				<div class="fields">
+					<div class="field">
+						<div class="label">Título *</div>
+						<div class="value"><input type="text" name="quick_title" class="finput" autocomplete="off" maxlength="500"></div>
+						<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field">
+						<div class="label">Subtítulo</div>
+						<div class="value"><input type="text" name="quick_subtitle" class="finput" autocomplete="off" maxlength="500"></div>
+						<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field">
+						<div class="label">Autor</div>
+						<div class="value"><input type="text" name="quick_author" class="finput" autocomplete="off" maxlength="300" placeholder="Assis, Machado de"></div>
+						<div class="extra"><span class="quick_hint">Sobrenome, Nome</span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field">
+						<div class="label">Editora</div>
+						<div class="value"><input type="text" name="quick_publisher" class="finput" autocomplete="off" maxlength="300"></div>
+						<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field quick_short">
+						<div class="label">Cidade</div>
+						<div class="value"><input type="text" name="quick_place" class="finput" autocomplete="off" maxlength="200"></div>
+						<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field quick_short">
+						<div class="label">Ano</div>
+						<div class="value"><input type="text" name="quick_year" class="finput" autocomplete="off" maxlength="4" inputmode="numeric"></div>
+						<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field quick_short">
+						<div class="label">Edição</div>
+						<div class="value"><input type="text" name="quick_edition" class="finput" autocomplete="off" maxlength="100"></div>
+						<div class="extra"><span class="quick_hint">ex.: 2. ed.</span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field quick_short">
+						<div class="label">ISBN</div>
+						<div class="value"><input type="text" name="quick_isbn" class="finput" autocomplete="off" maxlength="20"></div>
+						<div class="extra"><span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field">
+						<div class="label">Assunto</div>
+						<div class="value"><input type="text" name="quick_subject" class="finput" autocomplete="off" maxlength="300"></div>
+						<div class="extra"><span class="quick_hint">ex.: Direito constitucional</span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field quick_short">
+						<div class="label">Localização na estante</div>
+						<div class="value"><input type="text" name="quick_location" class="finput" autocomplete="off" maxlength="100"></div>
+						<div class="extra"><span class="quick_hint">ex.: 342 S586c</span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+					<div class="field quick_short">
+						<div class="label">Quantidade de exemplares</div>
+						<div class="value"><input type="text" name="quick_copies" class="finput" autocomplete="off" maxlength="2" inputmode="numeric" value="1"></div>
+						<div class="extra"><span class="quick_hint">0 = cadastrar sem exemplares</span><span class="quick_error"></span></div>
+						<div class="clear"></div>
+					</div>
+				</div>
+				<div class="buttons">
+					<a class="main_button center" onclick="QuickAdd.save();">Salvar e cadastrar outro</a>
+					<a class="button center" onclick="QuickAdd.close();">Fechar</a>
+				</div>
+			</fieldset>
 		</div>
 
 		<div class="page_title">

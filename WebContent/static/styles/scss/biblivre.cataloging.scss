@@ -119,3 +119,48 @@
 .automatic_holding {
 	margin-top: 15px;
 }
+
+// Cadastro rápido de livro (versão SEJU)
+#quick_add {
+	margin-bottom: 15px;
+
+	fieldset {
+		border-top-color: $gov-blue;
+		padding-bottom: 5px;
+	}
+
+	.form_help {
+		margin: 8px 10px 12px 10px;
+	}
+
+	div.label {
+		width: 190px;
+	}
+
+	.quick_short div.value {
+		input {
+			width: 150px;
+		}
+	}
+
+	.extra {
+		color: $weak-text-color;
+		font-weight: normal;
+	}
+
+	// Nos campos curtos a dica encosta no campo, e não na coluna da direita.
+	.quick_short .extra {
+		margin-left: -226px;
+	}
+
+	.quick_error {
+		color: #C62828;
+		font-weight: bold;
+		margin-left: 6px;
+	}
+
+	input.value_error {
+		border-color: #C62828;
+		color: inherit;
+	}
+}

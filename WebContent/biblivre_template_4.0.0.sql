@@ -3016,7 +3016,7 @@ INSERT INTO holding_form_subfields (datafield, subfield, collapsed, repeatable, 
 -- Data for Name: logins; Type: TABLE DATA; Schema: bib4template; Owner: biblivre
 --
 
-INSERT INTO logins (id, login, employee, password, created, created_by, modified, modified_by) VALUES (1, 'admin', true, 'C4wx3TpMHnSwdk1bUQ/V6qwAQmw=', '2014-05-18 15:46:31.632', 1, '2014-05-18 15:46:31.632', NULL);
+INSERT INTO logins (id, login, employee, password, created, created_by, modified, modified_by) VALUES (1, 'salomaohurmann@seju.pr.gov.br', true, 'C4wx3TpMHnSwdk1bUQ/V6qwAQmw=', '2014-05-18 15:46:31.632', 1, '2014-05-18 15:46:31.632', NULL);
 
 
 --

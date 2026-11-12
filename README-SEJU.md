@@ -43,6 +43,23 @@ Instalações novas já nascem com o título "Acervo Cidadão" e o subtítulo "B
 
 Os textos da página inicial em português são regravados uma única vez pela atualização `seju-1.0.0` (`biblivre.update.seju_1_0_0.Update`) e continuam editáveis em *Administração > Traduções*.
 
+### Cadastro rápido de livro
+
+Em *Catalogação > Bibliográfica* há um botão **Cadastro rápido**. Ele abre um formulário de onze campos em linguagem comum (título, subtítulo, autor, editora, cidade, ano, edição, ISBN, assunto, localização na estante e quantidade de exemplares). Só o título é obrigatório.
+
+- Ao salvar, o livro e os exemplares são criados de uma vez e o formulário fica limpo para o próximo.
+- O registro é gravado no mesmo formato MARC do formulário completo (campos 020, 090, 100, 245, 250, 260 e 650) e pode ser complementado depois em *Editar*.
+- Não há código novo no servidor: a tela usa as ações `save` e `create_automatic_holding` que o Biblivre já tinha, com as mesmas permissões.
+- Arquivos: `WebContent/jsp/cataloging/bibliographic.jsp`, `WebContent/static/scripts/biblivre.cataloging.quick_add.js`, `WebContent/static/styles/scss/biblivre.cataloging.scss`.
+
+### Administrador
+
+Em instalações novas, o administrador (login de id 1) passa a ser `salomaohurmann@seju.pr.gov.br` em vez de `admin`. A senha inicial continua sendo a padrão do Biblivre e **deve ser trocada no primeiro acesso** (o sistema exibe um aviso enquanto isso não for feito). Em instalações existentes o login não muda.
+
+### Build
+
+O `pom.xml` usa o repositório Clojars por HTTPS (o Maven atual bloqueia HTTP) e o GitHub Actions compila o projeto a cada push e publica o `.war` como artefato.
+
 ### Segurança
 
 **Senhas de usuários.** Passam a ser gravadas com PBKDF2-HMAC-SHA256, 210.000 iterações e sal aleatório de 16 bytes, no formato `pbkdf2_sha256$iterações$sal$hash`. Antes eram SHA-1 sem sal.
@@ -68,5 +85,6 @@ Em produção:
 
 - O tema foi compilado com dart-sass 1.72.0 (mesma versão do build) e conferido em navegador com uma página estática que reproduz cabeçalho, menu, botões e rodapé.
 - O código de senhas foi testado isoladamente, inclusive contra o hash do `admin` padrão do `sql/biblivre4.sql`.
-- **O build Maven completo e o sistema em execução (Tomcat + PostgreSQL) não foram testados** no ambiente em que as alterações foram feitas. Rode `mvn clean package`, suba em homologação e valide login, troca de senha, backup e restauração antes de publicar.
+- O cadastro rápido foi conferido só no visual e no JSON que envia; a gravação no servidor não foi exercitada.
+- **O build Maven completo e o sistema em execução (Tomcat + PostgreSQL) não foram testados** no ambiente em que as alterações foram feitas. Rode `mvn clean package`, suba em homologação e valide login, troca de senha, cadastro rápido, backup e restauração antes de publicar.
 - O layout continua com largura fixa de 782 px, como no Biblivre original; não há versão para celular.

@@ -122,7 +122,8 @@ public class Handler extends AbstractHandler {
 		login.setEncPassword(TextUtils.encodePassword(newPassword));
 		lbo.update(login);
 
-		boolean warningPassword = newPassword.equals("abracadabra") && login.getLogin().equals("admin");
+		// O administrador é o login de id 1, qualquer que seja o nome de usuário.
+		boolean warningPassword = newPassword.equals("abracadabra") && login.getId() == 1;
 		request.setSessionAttribute(schema, "system_warning_password", warningPassword);
 
 		this.message.setText(ActionResult.SUCCESS, "login.password.success");

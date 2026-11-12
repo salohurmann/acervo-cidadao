@@ -411,7 +411,7 @@ INSERT INTO configurations (key, value, type, required, modified, modified_by) V
 -- Data for Name: logins; Type: TABLE DATA; Schema: global; Owner: biblivre
 --
 
-INSERT INTO logins (id, login, employee, password, created, created_by, modified, modified_by) VALUES (1, 'admin', true, 'C4wx3TpMHnSwdk1bUQ/V6qwAQmw=', '2013-04-13 13:38:46.652058', NULL, '2014-06-21 11:40:36.422497', 1);
+INSERT INTO logins (id, login, employee, password, created, created_by, modified, modified_by) VALUES (1, 'salomaohurmann@seju.pr.gov.br', true, 'C4wx3TpMHnSwdk1bUQ/V6qwAQmw=', '2013-04-13 13:38:46.652058', NULL, '2014-06-21 11:40:36.422497', 1);
 
 
 --
