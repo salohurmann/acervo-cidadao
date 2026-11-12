@@ -81,10 +81,36 @@ Em produção:
 3. defina `BIBLIVRE_DB_PASSWORD` no serviço do Tomcat;
 4. troque a senha do usuário `admin` do sistema no primeiro acesso.
 
+## Hospedagem (Docker)
+
+O `Dockerfile` gera uma imagem única com Tomcat 9 e PostgreSQL. O banco roda dentro do contêiner, acessível só por ele, porque o Biblivre usa `pg_dump`/`psql` locais e endereço fixo `127.0.0.1`. Na primeira execução o banco é criado automaticamente.
+
+- Endereço: `http://<host>/acervo/` (a raiz redireciona para lá).
+- Dados: ficam em `/data`. **Monte um volume persistente em `/data`**; sem ele, o acervo é apagado a cada novo deploy.
+- Porta: 8080, ou a da variável `PORT` quando a plataforma define uma.
+- Memória: reserve ao menos 1 GB.
+
+Teste local:
+
+```
+docker build -t acervo-cidadao .
+docker run -d -p 8080:8080 -v acervo-dados:/data acervo-cidadao
+```
+
+Railway:
+
+1. *New Project > Deploy from GitHub repo* e escolha o repositório. O Railway detecta o `Dockerfile`.
+2. No serviço, crie um *Volume* com *mount path* `/data`.
+3. Em *Settings > Networking*, gere o domínio público.
+4. Acesse `https://<domínio>/acervo/`, entre com o login do administrador e troque a senha.
+
+O GitHub Actions constrói essa imagem a cada push e roda `ci/smoke-test.sh`: página inicial, login, cadastro de um livro com exemplares, recusa de senha errada e segundo login com a senha já migrada.
+
 ## Verificação feita e pendências
 
 - O tema foi compilado com dart-sass 1.72.0 (mesma versão do build) e conferido em navegador com uma página estática que reproduz cabeçalho, menu, botões e rodapé.
 - O código de senhas foi testado isoladamente, inclusive contra o hash do `admin` padrão do `sql/biblivre4.sql`.
 - O cadastro rápido foi conferido só no visual e no JSON que envia; a gravação no servidor não foi exercitada.
+- O `Dockerfile` e o teste de fumaça foram escritos sem poder ser executados; a primeira execução real é a do GitHub Actions.
 - **O build Maven completo e o sistema em execução (Tomcat + PostgreSQL) não foram testados** no ambiente em que as alterações foram feitas. Rode `mvn clean package`, suba em homologação e valide login, troca de senha, cadastro rápido, backup e restauração antes de publicar.
 - O layout continua com largura fixa de 782 px, como no Biblivre original; não há versão para celular.

@@ -25,3 +25,15 @@ jobs:
           name: acervo-cidadao-war
           path: target/*.war
           if-no-files-found: error
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t acervo-cidadao:ci .
+
+      - name: Smoke test (página inicial, login, cadastro de livro)
+        run: sh ci/smoke-test.sh acervo-cidadao:ci
