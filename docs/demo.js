@@ -84,7 +84,7 @@ $(document).ready(function() {
 	$('form').submit(function(e) { e.preventDefault(); });
 
 	// Na demonstração o formulário fica sempre aberto.
-	QuickAdd.open = function() { QuickAdd.input('quick_title').focus(); };
+	QuickAdd.open = function() { QuickAdd.input('quick_isbn').focus(); };
 	QuickAdd.close = function() { QuickAdd.clear(); };
 
 	CatalogingInput.updateDatabaseCount();

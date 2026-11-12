@@ -40,6 +40,12 @@
 					<i18n:text key="text.main.logged_out" />
 				</c:when>
 				<c:otherwise>
+					<c:if test="${login.employee}">
+						<p class="home_shortcuts">
+							<a class="main_button arrow_right" href="?action=cataloging_bibliographic&amp;quick=1">Cadastrar livro</a>
+							<a class="button arrow_right" href="?action=search_bibliographic">Pesquisar no acervo</a>
+						</p>
+					</c:if>
 					<i18n:text key="text.main.logged_in" param1="${name}" />								
 				</c:otherwise>
 			</c:choose>

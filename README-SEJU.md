@@ -45,12 +45,18 @@ Os textos da página inicial em português são regravados uma única vez pela a
 
 ### Cadastro rápido de livro
 
-Em *Catalogação > Bibliográfica* há um botão **Cadastro rápido**. Ele abre um formulário de onze campos em linguagem comum (título, subtítulo, autor, editora, cidade, ano, edição, ISBN, assunto, localização na estante e quantidade de exemplares). Só o título é obrigatório.
+Em *Catalogação > Bibliográfica* há um botão **Cadastro rápido** (e, para funcionários, um atalho **Cadastrar livro** na página inicial). Ele abre um formulário em linguagem comum; só o título é obrigatório.
 
-- Ao salvar, o livro e os exemplares são criados de uma vez e o formulário fica limpo para o próximo.
-- O registro é gravado no mesmo formato MARC do formulário completo (campos 020, 090, 100, 245, 250, 260 e 650) e pode ser complementado depois em *Editar*.
+- **Preenchimento pelo ISBN.** Digite o ISBN e tecle Enter (ou *Buscar dados*): título, subtítulo, autores, editora, cidade, ano e assunto são preenchidos para conferência. O nome do autor é invertido para "Sobrenome, Nome", e os demais autores entram como entradas secundárias (campo 700).
+- **Leitura do código de barras pela câmera**, nos navegadores que têm leitor embutido (Chrome no Android, por exemplo) e com o sistema servido por HTTPS. Onde não há suporte, o botão não aparece.
+- **Manter dados para o próximo livro** (editora, cidade, ano, assunto e localização), útil para cadastrar uma coleção em sequência.
+- Ao salvar, o livro e os exemplares são criados de uma vez e o formulário fica pronto para o próximo.
+- O registro é gravado no mesmo formato MARC do formulário completo (campos 020, 090, 100, 245, 250, 260, 650 e 700) e pode ser complementado depois em *Editar*.
 - Não há código novo no servidor: a tela usa as ações `save` e `create_automatic_holding` que o Biblivre já tinha, com as mesmas permissões.
-- Arquivos: `WebContent/jsp/cataloging/bibliographic.jsp`, `WebContent/static/scripts/biblivre.cataloging.quick_add.js`, `WebContent/static/styles/scss/biblivre.cataloging.scss`.
+
+A consulta por ISBN é feita pelo navegador de quem cadastra, em bases públicas e sem chave de acesso: primeiro a BrasilAPI (que reúne Câmara Brasileira do Livro, Mercado Editorial, Open Library e Google Books) e, se ela não achar, o Google Books. Só o número do ISBN sai da rede da Secretaria. Se a rede bloquear esses endereços (`brasilapi.com.br` e `www.googleapis.com`), o formulário avisa e segue funcionando com preenchimento manual.
+
+Arquivos: `WebContent/jsp/cataloging/bibliographic.jsp`, `WebContent/static/scripts/biblivre.cataloging.quick_add.js`, `WebContent/static/scripts/biblivre.cataloging.isbn_lookup.js`, `WebContent/static/styles/scss/biblivre.cataloging.scss`, `WebContent/jsp/index.jsp`.
 
 ### Administrador
 
@@ -86,7 +92,8 @@ Em produção:
 A pasta `docs/` contém uma demonstração das telas que funciona sem servidor e sem banco: página inicial e cadastro rápido de livro. Ela usa o CSS compilado do tema e o script real do cadastro rápido, com o servidor simulado em `docs/demo.js`. Não há login e nada é gravado; os livros digitados ficam só na memória da página.
 
 - Publicação: no repositório, *Settings > Pages > Deploy from a branch*, branch `main`, pasta `/docs`.
-- Depois de alterar o tema ou o cadastro rápido, regere os arquivos com `sh ci/build-demo.sh`.
+- Depois de alterar o tema ou o cadastro rápido, regere os arquivos com `sh ci/build-demo.sh`. As páginas são geradas por `ci/build-demo-pages.py`, que copia o painel do cadastro rápido da tela real.
+- Na demonstração a consulta por ISBN é de verdade; só a gravação é simulada.
 
 ## Hospedagem (Docker)
 

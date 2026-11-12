@@ -50,6 +50,17 @@ RECORD_ID="$(echo "$RESPONSE" | grep -Eo '"id": *[0-9]+' | head -n 1 | tr -cd '0
 [ -n "$RECORD_ID" ] || fail "cadastro do livro não devolveu o id: $RESPONSE"
 echo "ok  login e cadastro do livro (registro $RECORD_ID)"
 
+# A tela de catalogação precisa renderizar com o painel do cadastro rápido.
+curl -fsS -c /tmp/jar1 -b /tmp/jar1 -o /tmp/cataloging.html "$BASE?action=cataloging_bibliographic" \
+	|| fail "a tela de catalogação respondeu com erro"
+grep -q 'id="quick_add"' /tmp/cataloging.html || fail "a tela de catalogação não tem o cadastro rápido"
+grep -q 'biblivre.cataloging.isbn_lookup.js' /tmp/cataloging.html || fail "a tela de catalogação não carrega a consulta por ISBN"
+echo "ok  tela de catalogação com cadastro rápido"
+
+# A página inicial de quem está logado precisa renderizar (atalhos do funcionário).
+curl -fsS -c /tmp/jar1 -b /tmp/jar1 -o /tmp/home-logged.html "$BASE" || fail "a página inicial logada respondeu com erro"
+echo "ok  página inicial logada"
+
 RESPONSE="$(curl -fsS -c /tmp/jar1 -b /tmp/jar1 \
 	--data-urlencode "controller=json" --data-urlencode "module=cataloging.holding" --data-urlencode "action=create_automatic_holding" \
 	--data-urlencode "record_id=$RECORD_ID" --data-urlencode "database=main" --data-urlencode "holding_count=2" "$BASE")"

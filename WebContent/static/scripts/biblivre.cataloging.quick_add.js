@@ -14,10 +14,17 @@
  * cataloging.holding). Nenhuma regra de gravação foi duplicada aqui; o
  * registro criado pode ser aberto e complementado depois pelo formulário
  * completo.
+ *
+ * O ISBN pode ser digitado ou lido pela câmera (código de barras); os dados
+ * do livro são então buscados por IsbnLookup e preenchidos para conferência.
  */
 var QuickAdd = {
 	root: '#quick_add',
 	saving: false,
+	searching: false,
+
+	// Autores além do primeiro, vindos da consulta por ISBN (campo MARC 700).
+	extraAuthors: [],
 
 	// Campo do formulário rápido -> campo/subcampo MARC.
 	fields: [
@@ -33,6 +40,9 @@ var QuickAdd = {
 		{ name: 'quick_subject',   tag: '650', subfield: 'a' }
 	],
 
+	// Campos preservados quando "manter para o próximo" está marcado.
+	keptFields: ['quick_publisher', 'quick_place', 'quick_year', 'quick_subject', 'quick_location'],
+
 	getRoot: function() {
 		return $(this.root);
 	},
@@ -43,6 +53,38 @@ var QuickAdd = {
 
 	value: function(name) {
 		return $.trim(this.input(name).val() || '');
+	},
+
+	init: function() {
+		var root = this.getRoot();
+
+		if (root.length == 0) {
+			return;
+		}
+
+		// No campo ISBN, Enter busca os dados em vez de salvar.
+		this.input('quick_isbn').keypress(function(e) {
+			if (e.keyCode == 10 || e.keyCode == 13) {
+				e.preventDefault();
+				e.stopPropagation();
+				QuickAdd.lookupIsbn();
+			}
+		});
+
+		this.input('quick_author').bind('change', function() {
+			QuickAdd.setExtraAuthors([]);
+		});
+
+		if (!this.scanSupported()) {
+			root.find('.quick_scan_button').hide();
+		}
+
+		// Atalho da página inicial: ?action=cataloging_bibliographic&quick=1
+		if (/[?&]quick=1(&|$)/.test(window.location.search)) {
+			setTimeout(function() {
+				QuickAdd.open();
+			}, 0);
+		}
 	},
 
 	open: function() {
@@ -59,12 +101,13 @@ var QuickAdd = {
 
 		this.clearErrors();
 		this.getRoot().slideDown('fast', function() {
-			QuickAdd.input('quick_title').focus();
+			QuickAdd.input('quick_isbn').focus();
 			Core.fixResize();
 		});
 	},
 
 	close: function() {
+		this.stopScan();
 		this.clearErrors();
 		this.getRoot().slideUp('fast', function() {
 			Core.fixResize();
@@ -72,8 +115,20 @@ var QuickAdd = {
 	},
 
 	clear: function() {
-		this.getRoot().find('input[type="text"]').val('');
+		var keep = this.input('quick_keep').is(':checked');
+		var kept = this.keptFields;
+
+		this.getRoot().find('input[type="text"]').each(function() {
+			var input = $(this);
+
+			if (!keep || $.inArray(input.attr('name'), kept) == -1) {
+				input.val('');
+			}
+		});
+
 		this.input('quick_copies').val('1');
+		this.setExtraAuthors([]);
+		this.setStatus('');
 		this.clearErrors();
 	},
 
@@ -88,6 +143,181 @@ var QuickAdd = {
 		input.addClass('value_error');
 		input.closest('.field').find('.quick_error').text(text);
 	},
+
+	setStatus: function(text, level) {
+		this.getRoot().find('.quick_status')
+			.removeClass('quick_status_ok quick_status_warn')
+			.addClass(level ? 'quick_status_' + level : '')
+			.text(text || '');
+	},
+
+	setExtraAuthors: function(authors) {
+		this.extraAuthors = authors || [];
+
+		var hint = '';
+
+		if (this.extraAuthors.length == 1) {
+			hint = '+ 1 autor: ' + this.extraAuthors[0];
+		} else if (this.extraAuthors.length > 1) {
+			hint = '+ ' + this.extraAuthors.length + ' autores: ' + this.extraAuthors.join('; ');
+		}
+
+		this.getRoot().find('.quick_extra_authors').text(hint);
+	},
+
+	// ------------------------------------------------------------------ ISBN
+
+	lookupIsbn: function() {
+		if (this.searching) {
+			return;
+		}
+
+		this.clearErrors();
+
+		var isbn = IsbnLookup.normalize(this.value('quick_isbn'));
+
+		if (!isbn) {
+			this.showError('quick_isbn', 'ISBN inválido. Confira os 10 ou 13 dígitos.');
+			this.input('quick_isbn').focus();
+			return;
+		}
+
+		this.input('quick_isbn').val(isbn);
+		this.searching = true;
+		this.setStatus('Buscando os dados do livro...');
+
+		IsbnLookup.lookup(isbn, function(book, reason) {
+			QuickAdd.searching = false;
+
+			if (book) {
+				QuickAdd.applyBook(book);
+			} else if (reason == 'unavailable') {
+				QuickAdd.setStatus('Não consegui consultar as bases de ISBN agora. Preencha os dados à mão ou tente de novo.', 'warn');
+				QuickAdd.input('quick_title').focus();
+			} else {
+				QuickAdd.setStatus('Esse ISBN não está nas bases consultadas. Preencha os dados à mão.', 'warn');
+				QuickAdd.input('quick_title').focus();
+			}
+		});
+	},
+
+	// Preenche o formulário com o que a consulta devolveu. Os dados do livro
+	// anterior são limpos antes, para não se misturarem com os do novo; os
+	// campos marcados para manter só mudam se a consulta trouxer valor.
+	applyBook: function(book) {
+		var keep = this.input('quick_keep').is(':checked');
+		var names = ['quick_title', 'quick_subtitle', 'quick_author', 'quick_edition', 'quick_publisher', 'quick_place', 'quick_year', 'quick_subject'];
+
+		for (var i = 0; i < names.length; i++) {
+			if (!keep || $.inArray(names[i], this.keptFields) == -1) {
+				this.input(names[i]).val('');
+			}
+		}
+
+		this.setExtraAuthors([]);
+		this.clearErrors();
+
+		var set = function(name, value) {
+			if (value) {
+				QuickAdd.input(name).val(value);
+			}
+		};
+
+		set('quick_title', book.title);
+		set('quick_subtitle', book.subtitle);
+		set('quick_publisher', book.publisher);
+		set('quick_place', book.place);
+		set('quick_year', book.year);
+		set('quick_subject', book.subject);
+
+		if (book.authors.length > 0) {
+			this.input('quick_author').val(book.authors[0]);
+			this.setExtraAuthors(book.authors.slice(1));
+		}
+
+		this.setStatus('Dados encontrados (' + (book.source || 'base pública') + '). Confira e salve.', 'ok');
+		this.input('quick_copies').focus().select();
+	},
+
+	// ------------------------------------------------- leitura pela câmera
+
+	scanStream: null,
+	scanTimer: null,
+
+	scanSupported: function() {
+		return ('BarcodeDetector' in window) && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+	},
+
+	startScan: function() {
+		if (!this.scanSupported() || this.scanStream) {
+			return;
+		}
+
+		var box = this.getRoot().find('.quick_scan');
+		var video = box.find('video').get(0);
+		var detector;
+
+		try {
+			detector = new BarcodeDetector({ formats: ['ean_13'] });
+		} catch (e) {
+			this.setStatus('Este navegador não consegue ler código de barras. Digite o ISBN.', 'warn');
+			return;
+		}
+
+		navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false }).then(function(stream) {
+			QuickAdd.scanStream = stream;
+			video.srcObject = stream;
+			video.play();
+			box.show();
+			QuickAdd.setStatus('Aponte a câmera para o código de barras da contracapa.');
+			Core.fixResize();
+
+			QuickAdd.scanTimer = setInterval(function() {
+				if (video.readyState < 2) {
+					return;
+				}
+
+				detector.detect(video).then(function(codes) {
+					for (var i = 0; i < codes.length; i++) {
+						var isbn = IsbnLookup.normalize(codes[i].rawValue);
+
+						// Códigos de livro começam com 978 ou 979.
+						if (isbn && /^97[89]/.test(isbn) && QuickAdd.scanStream) {
+							QuickAdd.stopScan();
+							QuickAdd.input('quick_isbn').val(isbn);
+							QuickAdd.lookupIsbn();
+							return;
+						}
+					}
+				}, function() {
+					// Quadro ilegível: tenta de novo no próximo.
+				});
+			}, 350);
+		}, function() {
+			QuickAdd.setStatus('Não foi possível usar a câmera. Autorize o acesso ou digite o ISBN.', 'warn');
+		});
+	},
+
+	stopScan: function() {
+		if (this.scanTimer) {
+			clearInterval(this.scanTimer);
+			this.scanTimer = null;
+		}
+
+		if (this.scanStream) {
+			var tracks = this.scanStream.getTracks();
+
+			for (var i = 0; i < tracks.length; i++) {
+				tracks[i].stop();
+			}
+
+			this.scanStream = null;
+		}
+
+		this.getRoot().find('.quick_scan').hide();
+	},
+
+	// --------------------------------------------------------------- gravação
 
 	validate: function() {
 		var valid = true;
@@ -145,6 +375,15 @@ var QuickAdd = {
 		// secundária quando há autor, como no formulário completo.
 		if (json['100']) {
 			json['100'][0].ind1 = '1';
+
+			// Demais autores entram como entradas secundárias de nome pessoal.
+			for (var j = 0; j < this.extraAuthors.length; j++) {
+				if (!json['700']) {
+					json['700'] = [];
+				}
+
+				json['700'].push({ a: [this.extraAuthors[j]], ind1: '1' });
+			}
 		}
 
 		json['245'][0].ind1 = json['100'] ? '1' : '0';
@@ -162,6 +401,7 @@ var QuickAdd = {
 		var copies = parseInt(this.value('quick_copies'), 10);
 		var title = this.value('quick_title');
 
+		this.stopScan();
 		this.saving = true;
 
 		$.ajax({
@@ -237,9 +477,13 @@ var QuickAdd = {
 		}
 
 		this.clear();
-		this.input('quick_title').focus();
+		this.input('quick_isbn').focus();
 
 		CatalogingInput.updateDatabaseCount();
 		CatalogingSearch.redoSearch();
 	}
 };
+
+$(document).ready(function() {
+	QuickAdd.init();
+});

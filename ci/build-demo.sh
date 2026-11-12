@@ -13,6 +13,7 @@ for css in about acquisition administration administration.customization adminis
 	rm -f "docs/static/styles/biblivre.$css.css"
 done
 find WebContent/static/images -maxdepth 1 -type f -exec cp {} docs/static/images/ \;
-cp WebContent/static/scripts/jquery.js WebContent/static/scripts/biblivre.cataloging.quick_add.js docs/static/scripts/
+cp WebContent/static/scripts/jquery.js WebContent/static/scripts/biblivre.cataloging.isbn_lookup.js WebContent/static/scripts/biblivre.cataloging.quick_add.js docs/static/scripts/
+python3 ci/build-demo-pages.py
 touch docs/.nojekyll
 echo "docs/ atualizado"
