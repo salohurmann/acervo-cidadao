@@ -30,10 +30,10 @@
 			<% if (exception instanceof DAOException) { %>
 				<div>
 					Erro ao estabelecer conexão com o Banco de Dados.<br>
-					Por favor verifique se o mesmo está ativo e acessível pelo servidor Biblivre.
+					Por favor verifique se o mesmo está ativo e acessível pelo servidor do Acervo Cidadão.
 					<br><br>
 					Error establishing a connection to the Database Server.<br>
-					Please check if the database server is running and accessible by the Biblivre server.
+					Please check if the database server is running and accessible by the Acervo Cidadão server.
 				</div>
 			<% } else { %>
 				<div>
@@ -64,8 +64,8 @@
 					out.print("</pre>");
 				} else {
 					%>
-					Ocorreu um erro de aplicação durante a execução deste pedido. Os detalhes deste erro não podem ser visualizados a partir de um computador remoto (por medidas de segurança), mas podem ser vistos através de um navegador executado a partir do computador onde o Biblivre está instalado.<br><br>
-					An application error occurred on the server. The application prevents the details of this error from being viewed remotely (for security reasons). It could, however, be viewed by browsers running on the local Biblivre server machine.
+					Ocorreu um erro de aplicação durante a execução deste pedido. Os detalhes deste erro não podem ser visualizados a partir de um computador remoto (por medidas de segurança), mas podem ser vistos através de um navegador executado a partir do computador onde o Acervo Cidadão está instalado.<br><br>
+					An application error occurred on the server. The application prevents the details of this error from being viewed remotely (for security reasons). It could, however, be viewed by browsers running on the local Acervo Cidadão server machine.
 					<%
 				} 
 			}

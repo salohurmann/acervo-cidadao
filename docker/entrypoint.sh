@@ -98,7 +98,7 @@ if [ "$DB_MODE" = "external" ]; then
 		sleep 2
 	done
 
-	if [ "$(psql -Atc "select count(*) from pg_namespace where nspname = 'global'")" = "0" ]; then
+	if [ "$(psql -Atc "select count(*) from pg_namespace where nspname = 'single'")" = "0" ]; then
 		if [ "$PGUSER" = "biblivre" ]; then
 			load_schema psql -q -f /opt/acervo/sql/biblivre4.sql
 		else

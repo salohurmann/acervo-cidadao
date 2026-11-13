@@ -43,7 +43,7 @@
 			<div class="fields">
 				<div>
 					<div class="label"><i18n:text key="administration.configuration.original_value" /></div>
-					<div class="value">Biblivre IV</div>
+					<div class="value">Acervo Cidadão (SEJU)</div>
 					<div class="clear"></div>
 				</div>
 				<div>
