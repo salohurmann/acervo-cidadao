@@ -32,8 +32,41 @@ load_schema() {
 SKIP_SETUP_SQL="UPDATE single.configurations SET value = 'false' WHERE key = 'setup.new_library'"
 
 if [ "$DB_MODE" = "external" ]; then
+	if [ -n "$DATABASE_URL" ]; then
+		_url="${DATABASE_URL#postgres://}"
+		_url="${_url#postgresql://}"
+		_userinfo="${_url%%@*}"
+		_hostpart="${_url#*@}"
+		PGUSER="${_userinfo%%:*}"
+		BIBLIVRE_DB_PASSWORD="${_userinfo#*:}"
+		_hostport="${_hostpart%%/*}"
+		_dbquery="${_hostpart#*/}"
+		PGHOST="${_hostport%%:*}"
+		case "$_hostport" in
+			*:*) PGPORT="${_hostport#*:}" ;;
+			*) PGPORT="5432" ;;
+		esac
+		PGDATABASE="${_dbquery%%\?*}"
+		case "$_dbquery" in
+			*sslmode=*)
+				PGSSLMODE="${_dbquery#*sslmode=}"
+				PGSSLMODE="${PGSSLMODE%%&*}"
+				;;
+			*) PGSSLMODE="require" ;;
+		esac
+		export PGHOST PGPORT PGUSER PGDATABASE PGSSLMODE
+	else
+		export PGHOST="${ACERVO_DB_HOST:-127.0.0.1}"
+		export PGPORT="${ACERVO_DB_PORT:-5432}"
+		export PGUSER="${ACERVO_DB_USER:-biblivre}"
+		export PGDATABASE="${ACERVO_DB_NAME:-biblivre4}"
+		if [ -n "$ACERVO_DB_SSLMODE" ]; then
+			export PGSSLMODE="$ACERVO_DB_SSLMODE"
+		fi
+	fi
+
 	if [ -z "$BIBLIVRE_DB_PASSWORD" ]; then
-		echo "[acervo] ERRO: defina BIBLIVRE_DB_PASSWORD no modo external." >&2
+		echo "[acervo] ERRO: defina BIBLIVRE_DB_PASSWORD (ou DATABASE_URL) no modo external." >&2
 		exit 1
 	fi
 
@@ -51,17 +84,14 @@ if [ "$DB_MODE" = "external" ]; then
 		socat TCP-LISTEN:5432,bind=127.0.0.1,fork,reuseaddr "UNIX-CONNECT:/cloudsql/$CLOUD_SQL_INSTANCE/.s.PGSQL.5432" &
 	fi
 
-	# PGHOST também é herdado pelo Tomcat: é assim que o pg_dump e o psql
-	# chamados pelo Biblivre (backup, restauração) chegam ao banco externo.
-	export PGHOST=127.0.0.1 PGPORT=5432
-	export PGUSER=biblivre PGDATABASE=biblivre4 PGPASSWORD="$BIBLIVRE_DB_PASSWORD"
+	export PGPASSWORD="$BIBLIVRE_DB_PASSWORD"
 
-	echo "[acervo] Aguardando o banco de dados externo"
+	echo "[acervo] Aguardando o banco de dados externo ($PGHOST:$PGPORT/$PGDATABASE)"
 	tries=0
 	until psql -Atc "select 1" > /dev/null 2>&1; do
 		tries=$((tries + 1))
 		if [ "$tries" -gt 60 ]; then
-			echo "[acervo] ERRO: não foi possível conectar ao banco biblivre4 como usuário biblivre em 127.0.0.1:5432." >&2
+			echo "[acervo] ERRO: não foi possível conectar ao banco $PGDATABASE como usuário $PGUSER em $PGHOST:$PGPORT." >&2
 			psql -Atc "select 1" || true
 			exit 1
 		fi
@@ -69,13 +99,28 @@ if [ "$DB_MODE" = "external" ]; then
 	done
 
 	if [ "$(psql -Atc "select count(*) from pg_namespace where nspname = 'global'")" = "0" ]; then
-		load_schema psql -q -f /opt/acervo/sql/biblivre4.sql
+		if [ "$PGUSER" = "biblivre" ]; then
+			load_schema psql -q -f /opt/acervo/sql/biblivre4.sql
+		else
+			# Bancos gerenciados como Neon/Supabase usam outro usuário (ex.: neondb_owner).
+			load_schema sh -c "sed 's/OWNER TO biblivre;/OWNER TO \"'\"$PGUSER\"'\";/g' /opt/acervo/sql/biblivre4.sql | psql -q"
+		fi
 		psql -q -c "$SKIP_SETUP_SQL"
 	fi
 
+	_db_user="$PGUSER"
+	export BIBLIVRE_DB_PASSWORD
 	unset PGUSER PGDATABASE PGPASSWORD
 
-	sed -i "s/dataSource.password=\"[^\"]*\"/dataSource.password=\"$BIBLIVRE_DB_PASSWORD\"/" "$CONTEXT_XML"
+	JDBC_URL="jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}"
+	if [ -n "$PGSSLMODE" ]; then
+		JDBC_URL="${JDBC_URL}?sslmode=${PGSSLMODE}"
+	fi
+
+	sed -i "s|dataSource.url=\"jdbc:postgresql://127.0.0.1:5432/biblivre4\"|dataSource.url=\"$JDBC_URL\"|g" "$CONTEXT_XML"
+	sed -i "s|dataSource.user=\"[^\"]*\"|dataSource.user=\"$_db_user\"|g" "$CONTEXT_XML"
+	sed -i "s|dataSource.password=\"[^\"]*\"|dataSource.password=\"$BIBLIVRE_DB_PASSWORD\"|g" "$CONTEXT_XML"
+	sed -i 's/minimumIdle="5"/minimumIdle="1"/g; s/maximumPoolSize="10"/maximumPoolSize="5"/g' "$CONTEXT_XML"
 else
 	PGBIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -n 1)"
 	PGDATA="${PGDATA:-/data/pgdata}"
