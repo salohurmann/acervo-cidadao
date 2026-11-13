@@ -24,26 +24,42 @@
 		width: 100% !important;
 		max-width: 100% !important;
 		min-width: 0 !important;
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+		left: auto !important;
+		right: auto !important;
 		box-sizing: border-box !important;
 	}
 
 	#header {
+		position: relative !important;
 		height: auto !important;
-		padding: 12px 14px !important;
+		padding: 14px 12px 0 12px !important;
+		background-color: #FFFFFF !important;
+		background-image: linear-gradient(to right, $gov-green 0%, $gov-green 100%) !important;
+		background-size: 100% 4px !important;
+		background-repeat: no-repeat !important;
+		background-position: 0 0 !important;
+		border-bottom: 0 !important;
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
+		align-items: stretch;
 		gap: 8px;
 
 		#logo_biblivre,
 		#logo_support,
 		#logo_sponsor,
 		#title,
-		#language_selection {
+		#language_selection,
+		#menu {
 			position: static !important;
 			float: none !important;
+			top: auto !important;
+			bottom: auto !important;
+			left: auto !important;
+			right: auto !important;
 			margin: 0 !important;
-			width: auto !important;
+			width: 100% !important;
 			height: auto !important;
 		}
 
@@ -52,22 +68,46 @@
 			display: none !important;
 		}
 
-		#title h1 {
-			font-size: 22px !important;
-			line-height: 1.2 !important;
+		#logo_biblivre {
+			overflow: visible !important;
 		}
 
-		#title h2 {
-			font-size: 13px !important;
-			line-height: 1.3 !important;
+		#title {
+			padding-top: 2px !important;
+
+			h1 {
+				margin-left: 0 !important;
+				font-size: 22px !important;
+				line-height: 1.2 !important;
+			}
+
+			h2 {
+				margin-left: 0 !important;
+				font-size: 13px !important;
+				line-height: 1.3 !important;
+			}
+		}
+
+		#language_selection {
+			text-align: left !important;
+
+			select,
+			.combo_wrap {
+				width: auto !important;
+				max-width: 100% !important;
+			}
 		}
 	}
 
 	#menu {
-		height: auto !important;
-		padding: 6px 10px !important;
+		background: $menu-background !important;
+		padding: 8px 12px !important;
+		margin: 8px -12px 0 -12px !important;
+		width: calc(100% + 24px) !important;
+		max-width: calc(100% + 24px) !important;
+		line-height: 1.4 !important;
 
-		ul.menu {
+		> ul {
 			display: flex;
 			flex-wrap: wrap;
 			align-items: center;
@@ -78,52 +118,130 @@
 			> li {
 				float: none !important;
 				height: auto !important;
+				padding: 6px 10px !important;
 
 				> a {
-					padding: 8px 10px !important;
-					line-height: 1.3 !important;
+					display: inline-block;
+					padding: 4px 2px !important;
 					touch-action: manipulation;
 				}
 			}
 		}
 
-		#login {
-			position: static !important;
+		.login,
+		.logout,
+		.inputs {
 			float: none !important;
 			width: 100% !important;
-			height: auto !important;
+			line-height: 1.4 !important;
 			margin-top: 6px;
-			padding-top: 6px;
-			border-top: 1px solid rgba(255, 255, 255, 0.25);
+		}
 
-			.google_login_button,
-			.button,
-			.main_button {
-				width: 100%;
-				text-align: center;
-				box-sizing: border-box;
-			}
+		.google_login_button,
+		.button,
+		.main_button {
+			display: block !important;
+			width: 100% !important;
+			text-align: center !important;
+			white-space: normal !important;
+			height: auto !important;
+			line-height: 1.3 !important;
+			padding: 10px 12px !important;
+			box-sizing: border-box !important;
 		}
 	}
 
 	#content_outer {
 		height: auto !important;
 		overflow: visible !important;
-		padding: 10px !important;
+		padding: 12px !important;
 	}
 
 	#content {
-		padding: 10px !important;
+		padding: 12px !important;
 	}
 
 	#content_inner {
 		padding: 8px !important;
 	}
 
+	.picture {
+		float: none !important;
+		width: 100% !important;
+		max-width: 320px !important;
+		height: auto !important;
+		margin: 0 auto 16px auto !important;
+
+		img {
+			display: block;
+			width: 100% !important;
+			height: auto !important;
+		}
+	}
+
+	.text {
+		margin: 0 !important;
+		text-align: left !important;
+
+		.home_shortcuts a {
+			display: inline-block;
+			margin-bottom: 8px;
+		}
+	}
+
 	.text img,
 	#content img {
 		max-width: 100% !important;
 		height: auto !important;
+	}
+
+	.search_box {
+		.simple_search {
+			height: auto !important;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+
+			.query,
+			.distributed_query,
+			.wide_query,
+			.buttons,
+			.attributes {
+				position: static !important;
+				left: auto !important;
+				right: auto !important;
+				bottom: auto !important;
+				width: 100% !important;
+				line-height: normal !important;
+				font-size: 14px !important;
+
+				input {
+					width: 100% !important;
+				}
+			}
+
+			.buttons {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+
+				.combo,
+				.main_button {
+					width: 100% !important;
+					margin-left: 0 !important;
+				}
+			}
+		}
+
+		.advanced_search .search_entry {
+			.operator,
+			.query,
+			.field {
+				float: none !important;
+				width: 100% !important;
+				margin: 0 0 6px 0 !important;
+			}
+		}
 	}
 
 	#database_selection {
