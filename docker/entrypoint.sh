@@ -109,10 +109,10 @@ if [ "$DB_MODE" = "external" ]; then
 	fi
 
 	_db_user="$PGUSER"
+	_db_name="$PGDATABASE"
 	export BIBLIVRE_DB_PASSWORD
-	unset PGUSER PGDATABASE PGPASSWORD
 
-	JDBC_URL="jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}"
+	JDBC_URL="jdbc:postgresql://${PGHOST}:${PGPORT}/${_db_name}"
 	if [ -n "$PGSSLMODE" ]; then
 		JDBC_URL="${JDBC_URL}?sslmode=${PGSSLMODE}"
 	fi
@@ -121,6 +121,8 @@ if [ "$DB_MODE" = "external" ]; then
 	sed -i "s|dataSource.user=\"[^\"]*\"|dataSource.user=\"$_db_user\"|g" "$CONTEXT_XML"
 	sed -i "s|dataSource.password=\"[^\"]*\"|dataSource.password=\"$BIBLIVRE_DB_PASSWORD\"|g" "$CONTEXT_XML"
 	sed -i 's/minimumIdle="5"/minimumIdle="1"/g; s/maximumPoolSize="10"/maximumPoolSize="5"/g' "$CONTEXT_XML"
+
+	unset PGUSER PGDATABASE PGPASSWORD
 else
 	PGBIN="$(ls -d /usr/lib/postgresql/*/bin | sort -V | tail -n 1)"
 	PGDATA="${PGDATA:-/data/pgdata}"
