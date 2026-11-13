@@ -23,7 +23,11 @@ import biblivre.cataloging.CatalogingHandler;
 import biblivre.cataloging.RecordDTO;
 import biblivre.cataloging.enums.RecordType;
 import biblivre.core.ExtendedRequest;
+import biblivre.core.ExtendedResponse;
+import biblivre.core.enums.ActionResult;
 import biblivre.marc.MaterialType;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Handler extends CatalogingHandler {
 
@@ -34,5 +38,20 @@ public class Handler extends CatalogingHandler {
 	@Override
 	protected RecordDTO createRecordDTO(ExtendedRequest request) {
 		return new BiblioRecordDTO();
+	}
+
+	public void aiExtract(ExtendedRequest request, ExtendedResponse response) {
+		String imageBase64 = request.getString("image_base64");
+		String mimeType = request.getString("mime_type", "image/jpeg");
+
+		try {
+			JSONObject book = BookAiExtractor.extractFromImage(imageBase64, mimeType);
+			this.json.put("success", true);
+			this.json.put("data", book);
+		} catch (IllegalStateException e) {
+			this.setMessage(ActionResult.WARNING, e.getMessage());
+		} catch (Exception e) {
+			this.setMessage(ActionResult.WARNING, "Não foi possível extrair os dados da foto: " + e.getMessage());
+		}
 	}
 }

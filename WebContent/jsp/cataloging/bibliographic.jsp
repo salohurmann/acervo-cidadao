@@ -107,7 +107,7 @@
 					<div class="field quick_short quick_isbn_field">
 						<div class="label">ISBN</div>
 						<div class="value"><input type="text" name="quick_isbn" class="finput" autocomplete="off" maxlength="20" inputmode="numeric"></div>
-						<div class="extra"><a class="button center" onclick="QuickAdd.lookupIsbn();">Buscar dados</a> <a class="button center quick_scan_button" onclick="QuickAdd.startScan();">Ler código de barras</a> <span class="quick_hint"></span><span class="quick_error"></span></div>
+						<div class="extra"><a class="button center" onclick="QuickAdd.lookupIsbn();">Buscar dados</a> <a class="button center quick_scan_button" onclick="QuickAdd.startScan();">Ler código de barras</a> <a class="button center quick_ai_button" onclick="QuickAdd.triggerAiPhoto();">Preencher com IA (foto)</a><input type="file" accept="image/*" capture="environment" class="quick_ai_file" style="display: none;" onchange="QuickAdd.onAiPhotoSelected(this);"><span class="quick_hint"></span><span class="quick_error"></span></div>
 						<div class="clear"></div>
 					</div>
 					<div class="quick_scan" style="display: none;">

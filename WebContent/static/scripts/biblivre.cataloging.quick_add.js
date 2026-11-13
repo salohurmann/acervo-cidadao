@@ -223,20 +223,109 @@ var QuickAdd = {
 			}
 		};
 
+		set('quick_isbn', book.isbn);
 		set('quick_title', book.title);
 		set('quick_subtitle', book.subtitle);
+		set('quick_edition', book.edition);
 		set('quick_publisher', book.publisher);
 		set('quick_place', book.place);
 		set('quick_year', book.year);
 		set('quick_subject', book.subject);
 
-		if (book.authors.length > 0) {
+		if (book.authors && book.authors.length > 0) {
 			this.input('quick_author').val(book.authors[0]);
 			this.setExtraAuthors(book.authors.slice(1));
 		}
 
 		this.setStatus('Dados encontrados em: ' + (book.source || 'base pública') + '. Confira e salve.', 'ok');
 		this.input('quick_copies').focus().select();
+	},
+
+	// ------------------------------------------------- preenchimento com IA
+
+	triggerAiPhoto: function() {
+		if (this.searching || this.saving) {
+			return;
+		}
+		var fileInput = this.getRoot().find('.quick_ai_file');
+		fileInput.val('');
+		fileInput.click();
+	},
+
+	onAiPhotoSelected: function(input) {
+		var file = input.files && input.files[0];
+		if (!file) {
+			return;
+		}
+
+		this.searching = true;
+		this.clearErrors();
+		this.setStatus('Lendo a foto com IA...');
+
+		this.resizeImage(file, 1280, function(base64, mimeType) {
+			$.ajax({
+				url: window.location.pathname,
+				type: 'POST',
+				dataType: 'json',
+				data: {
+					controller: 'json',
+					module: 'cataloging.bibliographic',
+					action: 'ai_extract',
+					image_base64: base64,
+					mime_type: mimeType
+				},
+				success: function(response) {
+					QuickAdd.searching = false;
+					if (response && response.success && response.data) {
+						QuickAdd.applyBook(response.data);
+					} else {
+						QuickAdd.setStatus((response && response.message) || 'Não foi possível extrair os dados da foto.', 'warn');
+					}
+				},
+				error: function() {
+					QuickAdd.searching = false;
+					QuickAdd.setStatus('Erro de comunicação ao analisar a foto com IA.', 'warn');
+				}
+			});
+		}, function(errMsg) {
+			QuickAdd.searching = false;
+			QuickAdd.setStatus(errMsg || 'Não foi possível ler a imagem selecionada.', 'warn');
+		});
+	},
+
+	resizeImage: function(file, maxDim, onDone, onError) {
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			var img = new Image();
+			img.onload = function() {
+				var w = img.width;
+				var h = img.height;
+				if (w > maxDim || h > maxDim) {
+					if (w >= h) {
+						h = Math.round(h * maxDim / w);
+						w = maxDim;
+					} else {
+						w = Math.round(w * maxDim / h);
+						h = maxDim;
+					}
+				}
+				var canvas = document.createElement('canvas');
+				canvas.width = w;
+				canvas.height = h;
+				var ctx = canvas.getContext('2d');
+				ctx.drawImage(img, 0, 0, w, h);
+				var dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+				onDone(dataUrl.split(',')[1], 'image/jpeg');
+			};
+			img.onerror = function() {
+				onError('Arquivo de imagem inválido.');
+			};
+			img.src = e.target.result;
+		};
+		reader.onerror = function() {
+			onError('Falha ao ler o arquivo.');
+		};
+		reader.readAsDataURL(file);
 	},
 
 	// ------------------------------------------------- leitura pela câmera
