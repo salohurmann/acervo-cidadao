@@ -19,8 +19,8 @@ import org.json.JSONObject;
  */
 public final class BookAiExtractor {
 
-	private static final String GEMINI_ENDPOINT =
-		"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
+	private static final String DEFAULT_MODEL = "gemini-3.1-flash-lite";
+	private static final String GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
 
 	private static final String PROMPT =
 		"Analise esta imagem de um livro (capa, folha de rosto, contracapa ou ficha catalográfica). "
@@ -91,7 +91,10 @@ public final class BookAiExtractor {
 		payload.put("contents", contents);
 		payload.put("generationConfig", generationConfig);
 
-		HttpURLConnection conn = (HttpURLConnection) new URL(GEMINI_ENDPOINT + apiKey).openConnection();
+		String model = StringUtils.defaultIfBlank(System.getenv("ACERVO_GEMINI_MODEL"), DEFAULT_MODEL);
+		String endpoint = GEMINI_BASE + model + ":generateContent?key=" + apiKey;
+
+		HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
 		conn.setRequestMethod("POST");
 		conn.setConnectTimeout(10000);
 		conn.setReadTimeout(35000);
